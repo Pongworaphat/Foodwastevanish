@@ -64,7 +64,6 @@ export default function ChatPage() {
                     </span>
                 </div>
 
-                {/* พื้นที่แชท (ไม่มีข้อความจำลองแล้ว) */}
                 <div className="flex-1 overflow-y-auto px-4 py-6 bg-gray-50">
                     <div className="text-sm text-gray-500 text-center">
                         Start chatting with the donor here...

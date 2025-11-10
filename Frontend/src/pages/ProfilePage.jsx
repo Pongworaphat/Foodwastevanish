@@ -146,29 +146,6 @@ export default function ProfilePage() {
     }
   }
 
-  function handleCancel(section) {
-    try {
-      const raw = localStorage.getItem("user");
-      const u = raw ? JSON.parse(raw) : null;
-      setProfile((p) => ({
-        ...p,
-        name: u?.username || "",
-        email: u?.email || "",
-        phone: "",
-        about: "",
-        city: "",
-        country: "",
-        address: "",
-      }));
-      setSocial({ facebook: "", instagram: "", twitter: "", linkedin: "" });
-      setAvatarPreview(u?.avatar || null);
-    } catch {
-      setProfile({ name: "", email: "", phone: "", about: "", city: "", country: "", address: "" });
-      setSocial({ facebook: "", instagram: "", twitter: "", linkedin: "" });
-      setAvatarPreview(null);
-    }
-  }
-
   async function handleDeleteAccount() {
     const ok = window.confirm(
       "การกระทำนี้ไม่สามารถย้อนกลับได้\n\nต้องการลบบัญชีทั้งหมดของคุณหรือไม่?"
@@ -194,7 +171,6 @@ export default function ProfilePage() {
       localStorage.removeItem("authToken");
       localStorage.removeItem("user");
       alert("บัญชีถูกลบเรียบร้อย");
-      // นำทางไปหน้า home หรือ signin (ถ้ามี router)
       window.location.href = "/";
     } catch (err) {
       console.error(err);
@@ -292,13 +268,6 @@ export default function ProfilePage() {
                   >
                     {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCancel("profile")}
-                    className="px-4 py-2 border rounded-md"
-                  >
-                    ยกเลิก
-                  </button>
                 </div>
               </div>
             </div>
@@ -352,13 +321,6 @@ export default function ProfilePage() {
                 disabled={saving}
               >
                 {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleCancel("address")}
-                className="px-4 py-2 border rounded-md"
-              >
-                ยกเลิก
               </button>
             </div>
           </div>
@@ -421,13 +383,6 @@ export default function ProfilePage() {
                 disabled={saving}
               >
                 {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleCancel("social")}
-                className="px-4 py-2 border rounded-md"
-              >
-                ยกเลิก
               </button>
             </div>
           </div>
