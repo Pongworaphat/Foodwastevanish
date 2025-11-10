@@ -92,8 +92,6 @@ export default function ProfilePage() {
     }
   }
 
-
-
   function triggerUpload() {
     fileRef.current?.click();
   }
