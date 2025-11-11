@@ -1,13 +1,11 @@
-// Backend/routes/user.js
 const express = require('express');
-const path = require('path'); // <- ต้องมี
+const path = require('path');
 const User = require('../models/User');
 const verifyToken = require('../middleware/auth');
-const upload = require('../middleware/upload'); // ใช้ middleware ที่แยกไว้
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
-/** GET profile */
 router.get('/profile', verifyToken, async (req, res) => {
   try {
     const userId = req.user?.id || req.userId;
@@ -20,25 +18,43 @@ router.get('/profile', verifyToken, async (req, res) => {
   }
 });
 
-/** PUT update profile (whitelist fields) */
 router.put('/profile', verifyToken, async (req, res) => {
   try {
     const userId = req.user?.id || req.userId;
-    const allowed = ['username', 'email', 'name', 'phone'];
+
+    const payload = {};
+    if (req.body.profile && typeof req.body.profile === 'object') {
+      Object.assign(payload, req.body.profile);
+    }
+
+    Object.assign(payload, req.body);
+
     const updates = {};
-    for (const key of allowed) if (req.body[key] !== undefined) updates[key] = req.body[key];
-    if (updates.email) updates.email = updates.email.toLowerCase();
+    if (payload.name !== undefined) updates.username = payload.name;
+    if (payload.username !== undefined) updates.username = payload.username;
+    if (payload.email !== undefined) updates.email = String(payload.email).toLowerCase();
+    if (payload.phone !== undefined) {
+      // เก็บเฉพาะตัวเลขและเครื่องหมาย + (if any)
+      updates.phone = String(payload.phone).replace(/[^\d+]/g, '');
+    }
+    if (payload.about !== undefined) {
+      updates.about = String(payload.about).slice(0, 500);
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'No valid fields to update' });
+    }
 
     const user = await User.findByIdAndUpdate(userId, updates, { new: true }).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json({ message: 'Profile updated', user });
+
+    return res.json({ message: 'Profile updated', user });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('[ERROR route PUT /profile]', err);
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
-/** POST avatar (uses upload middleware) */
 router.post('/avatar', verifyToken, upload.single('avatar'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
@@ -46,7 +62,6 @@ router.post('/avatar', verifyToken, upload.single('avatar'), async (req, res) =>
     const userId = req.user?.id || req.userId;
     const avatarPath = `/uploads/${req.file.filename}`;
 
-    // ลบไฟล์เก่าถ้ามี (optional: implement safe unlink ใน controller)
     const existing = await User.findById(userId).select('avatar');
     if (existing && existing.avatar) {
       const fs = require('fs');
@@ -65,14 +80,12 @@ router.post('/avatar', verifyToken, upload.single('avatar'), async (req, res) =>
   }
 });
 
-/** DELETE user */
 router.delete('/', verifyToken, async (req, res) => {
   try {
     const userId = req.user?.id || req.userId;
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // ลบ avatar ถ้ามี
     if (user.avatar) {
       const fs = require('fs');
       const uploadsDir = path.join(__dirname, '..', 'uploads');
