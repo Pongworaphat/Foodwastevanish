@@ -1,3 +1,4 @@
+// ProfilePage.jsx (แก้แล้ว)
 import React, { useState, useRef, useEffect } from "react";
 
 export default function ProfilePage() {
@@ -9,6 +10,7 @@ export default function ProfilePage() {
     city: "",
     country: "",
     address: "",
+    avatar: "",
   });
 
   const [social, setSocial] = useState({
@@ -22,17 +24,36 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const fileRef = useRef(null);
 
+  // อ่านค่าเริ่มต้นจาก localStorage เมื่อ mount
   useEffect(() => {
     try {
       const raw = localStorage.getItem("user");
       if (!raw) return;
       const u = JSON.parse(raw);
+
       setProfile((p) => ({
         ...p,
         name: u.username || p.name,
         email: u.email || p.email,
+        phone: u.phone || p.phone,
+        about: u.about || p.about,
+        city: u.city || p.city,
+        country: u.country || p.country,
+        address: u.address || p.address,
+        avatar: u.avatar || p.avatar,
       }));
-      if (u.avatar) setAvatarPreview(u.avatar);
+
+      if (u.social && typeof u.social === "object") {
+        setSocial((s) => ({ ...s, ...u.social }));
+      }
+
+      if (u.avatar) {
+        const backend = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+        const avatarUrl = u.avatar.startsWith("/")
+          ? `${backend}${u.avatar}`
+          : u.avatar;
+        setAvatarPreview(avatarUrl);
+      }
     } catch (err) {
       console.error("Failed to parse user from localStorage", err);
     }
@@ -48,10 +69,12 @@ export default function ProfilePage() {
     setSocial((s) => ({ ...s, [name]: value }));
   }
 
-  // เปลี่ยนรูป
+  // เปลี่ยนรูป (ส่งเป็น multipart/form-data ด้วย fetch)
   async function handleFile(e) {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
+
+    // แสดง preview ทันที
     const previewUrl = URL.createObjectURL(f);
     setAvatarPreview(previewUrl);
 
@@ -65,10 +88,11 @@ export default function ProfilePage() {
     formData.append("avatar", f);
 
     try {
-      const res = await fetch("/api/user/avatar", {
-        method: "POST",
+      const res = await fetch("/api/user/profile", {
+        method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
+          // อย่าใส่ Content-Type เมื่อตั้ง body เป็น FormData — เบราว์เซอร์จะเซ็ต boundary ให้เอง
         },
         body: formData,
       });
@@ -76,15 +100,36 @@ export default function ProfilePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Upload failed");
 
-      if (data.user) {
-        const backend = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-        if (data.user.avatar && data.user.avatar.startsWith("/")) {
-          data.user.avatar = `${backend}${data.user.avatar}`;
-        }
-        localStorage.setItem("user", JSON.stringify(data.user));
-        window.dispatchEvent(new Event('user:updated'));
-        setAvatarPreview(data.user.avatar);
+      // แปลง avatar เป็น full URL ถ้ามาจาก path เช่น /uploads/...
+      const backend = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+      if (data.user && data.user.avatar && data.user.avatar.startsWith("/")) {
+        data.user.avatar = `${backend}${data.user.avatar}`;
       }
+
+      // อัปเดต localStorage + state ให้ UI แสดงค่าล่าสุดทันที
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setProfile((prev) => ({
+          ...prev,
+          name: data.user.username || prev.name,
+          email: data.user.email || prev.email,
+          phone: data.user.phone || prev.phone,
+          about: data.user.about || prev.about,
+          city: data.user.city || prev.city,
+          country: data.user.country || prev.country,
+          address: data.user.address || prev.address,
+          avatar: data.user.avatar || prev.avatar,
+        }));
+
+        if (data.user.social && typeof data.user.social === "object") {
+          setSocial((s) => ({ ...s, ...data.user.social }));
+        }
+
+        if (data.user.avatar) {
+          setAvatarPreview(data.user.avatar);
+        }
+      }
+
       alert("เปลี่ยนรูปสำเร็จ");
     } catch (err) {
       console.error(err);
@@ -96,48 +141,82 @@ export default function ProfilePage() {
     fileRef.current?.click();
   }
 
+  // บันทึกข้อมูล (profile, social, address)
   async function handleSave(section) {
     if (saving) return;
     setSaving(true);
 
     try {
-      if (section === "profile") {
-        if (!profile.name.trim()) {
-          alert("กรุณากรอกชื่อ");
-          setSaving(false);
-          return;
-        }
+      if (section === "profile" && !profile.name.trim()) {
+        alert("กรุณากรอกชื่อ");
+        setSaving(false);
+        return;
       }
 
       const token = localStorage.getItem("authToken");
-      if (token) {
-        const payload = { profile, social };
-        const res = await fetch("/api/user/profile", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.message || "ไม่สามารถบันทึกข้อมูลบนเซิร์ฟเวอร์ได้");
-        }
-
-        if (data.user) {
-          localStorage.setItem("user", JSON.stringify(data.user));
-        }
-
-        alert("บันทึกสำเร็จ");
-      } else {
+      if (!token) {
+        // ถ้าไม่มี token ก็เก็บแค่ใน localStorage (offline mode)
         const localUserRaw = localStorage.getItem("user");
         let localUser = localUserRaw ? JSON.parse(localUserRaw) : {};
-        localUser = { ...localUser, username: profile.name, email: profile.email };
+        localUser = {
+          ...localUser,
+          username: profile.name,
+          email: profile.email,
+          phone: profile.phone,
+          about: profile.about,
+          city: profile.city,
+          country: profile.country,
+          address: profile.address,
+          social: { ...localUser.social, ...social },
+        };
         localStorage.setItem("user", JSON.stringify(localUser));
         alert("บันทึก (local) สำเร็จ — ไม่มี token ให้ส่งไปยังเซิร์ฟเวอร์");
+        setSaving(false);
+        return;
       }
+
+      const payload = { ...profile, social: { ...social } };
+      const res = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "ไม่สามารถบันทึกข้อมูลบนเซิร์ฟเวอร์ได้");
+
+      // อัปเดต localStorage + state ตาม response เพื่อให้ UI แสดงผลทันที
+      if (data.user) {
+        // แปลง avatar เป็น full url ถ้าจำเป็น
+        const backend = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+        if (data.user.avatar && data.user.avatar.startsWith("/")) {
+          data.user.avatar = `${backend}${data.user.avatar}`;
+        }
+
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setProfile((prev) => ({
+          ...prev,
+          name: data.user.username || prev.name,
+          email: data.user.email || prev.email,
+          phone: data.user.phone || prev.phone,
+          about: data.user.about || prev.about,
+          city: data.user.city || prev.city,
+          country: data.user.country || prev.country,
+          address: data.user.address || prev.address,
+          avatar: data.user.avatar || prev.avatar,
+        }));
+
+        if (data.user.social && typeof data.user.social === "object") {
+          setSocial((s) => ({ ...s, ...data.user.social }));
+        }
+
+        if (data.user.avatar) setAvatarPreview(data.user.avatar);
+      }
+
+      alert("บันทึกสำเร็จ");
     } catch (err) {
       console.error(err);
       alert(err.message || "เกิดข้อผิดพลาดขณะบันทึก");
@@ -167,7 +246,6 @@ export default function ProfilePage() {
         const body = await res.json();
         throw new Error(body.message || "ไม่สามารถลบบัญชีได้");
       }
-      // ทำความสะอาด localStorage
       localStorage.removeItem("authToken");
       localStorage.removeItem("user");
       alert("บัญชีถูกลบเรียบร้อย");
@@ -188,15 +266,10 @@ export default function ProfilePage() {
               <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                 {avatarPreview ? (
                   <img
-                    src={
-                      avatarPreview?.startsWith("/uploads/")
-                        ? `http://localhost:5000${avatarPreview}`
-                        : avatarPreview
-                    }
+                    src={avatarPreview}
                     alt="avatar"
                     className="w-full h-full object-cover"
                   />
-
                 ) : (
                   <span className="text-gray-400">ผู้ใช้</span>
                 )}
@@ -206,7 +279,7 @@ export default function ProfilePage() {
                 onClick={triggerUpload}
                 className="mt-3 inline-block text-sm px-3 py-1 border rounded-md bg-white text-gray-700 hover:bg-gray-50"
               >
-                เปลี่ยนรูปโปรไฟล์
+                เลือกรูป
               </button>
               <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
             </div>
@@ -214,7 +287,7 @@ export default function ProfilePage() {
             <div className="flex-1">
               <div className="grid grid-cols-1 gap-4">
                 <label className="flex flex-col">
-                  <span className="text-sm text-gray-600 mb-1">ชื่อ</span>
+                  <span className="text-sm text-gray-600 mb-1">ชื่อผู้ใช้</span>
                   <input
                     name="name"
                     value={profile.name}
@@ -232,12 +305,12 @@ export default function ProfilePage() {
                     onChange={handleChange}
                     placeholder="Foodwastevanish@email.com"
                     className="px-4 py-2 bg-gray-50 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                    disabled // ปกติไม่ให้แก้อีเมลผ่าน frontend แบบนี้ ถ้าจะอนุญาตต้องมี flow ยืนยันอีเมล
+                    disabled
                   />
                 </label>
 
                 <label className="flex flex-col">
-                  <span className="text-sm text-gray-600 mb-1">เบอร์โทรศัพท์</span>
+                  <span className="text-sm text-gray-600 mb-1">หมายเลขโทรศัพท์</span>
                   <input
                     name="phone"
                     value={profile.phone}
@@ -266,7 +339,7 @@ export default function ProfilePage() {
                     className={`px-4 py-2 rounded-md text-white ${saving ? "bg-gray-400" : "bg-gray-900"}`}
                     disabled={saving}
                   >
-                    {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
+                    {saving ? "กำลังบันทึก..." : "บันทึก"}
                   </button>
                 </div>
               </div>
