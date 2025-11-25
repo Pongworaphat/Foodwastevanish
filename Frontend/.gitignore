@@ -32,3 +32,4 @@ dist-ssr
 Backend/.env
 Frontend/.env
 *.env
+
