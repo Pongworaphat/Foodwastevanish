@@ -24,10 +24,11 @@ dist-ssr
 *.sln
 *.sw?
 
-# Uploads (ทั้งโปรเจกต์)
+# Uploads
 **/uploads/
 
-# Env files
+# env files
 .env
 Backend/.env
 Frontend/.env
+*.env
