@@ -31,3 +31,6 @@ app.get("/", (req, res) => res.send("Backend running"));
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
 
 app.use("/uploads", express.static("uploads"));
+
+app.use("/api/users", require("./routes/user"));
+

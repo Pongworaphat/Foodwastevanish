@@ -3,8 +3,13 @@ const path = require('path');
 const User = require('../models/User');
 const verifyToken = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const auth = require("../middleware/auth");
+const { changePassword } = require("../controllers/userController");
+
 
 const router = express.Router();
+
+router.put("/change-password", auth, changePassword);
 
 router.get('/profile', verifyToken, async (req, res) => {
   try {

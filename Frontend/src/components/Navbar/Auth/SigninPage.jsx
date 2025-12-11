@@ -85,12 +85,10 @@ export default function SigninPage() {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
             >
               {showPassword ? (
-                // ไอคอน hide (eye-slash)
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.45 10.45 0 001.5 12c2.1 4.085 6.56 7.5 10.5 7.5 1.65 0 3.3-.45 4.8-1.305M7.362 7.362A4.492 4.492 0 0112 7.5c2.485 0 4.5 2.015 4.5 4.5 0 .793-.21 1.536-.577 2.185M3 3l18 18" />
                 </svg>
               ) : (
-                // ไอคอน show (eye)
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322c1.3 4.416 5.33 7.678 9.964 7.678 4.636 0 8.665-3.262 9.964-7.678C20.665 7.906 16.636 4.644 12 4.644c-4.635 0-8.664 3.262-9.964 7.678z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" />
@@ -98,7 +96,6 @@ export default function SigninPage() {
               )}
             </button>
           </div>
-
 
           {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
