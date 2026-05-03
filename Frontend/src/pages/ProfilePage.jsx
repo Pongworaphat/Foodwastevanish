@@ -1,4 +1,3 @@
-// ProfilePage.jsx (แก้แล้ว)
 import React, { useState, useRef, useEffect } from "react";
 
 export default function ProfilePage() {
@@ -69,7 +68,6 @@ export default function ProfilePage() {
     setSocial((s) => ({ ...s, [name]: value }));
   }
 
-  // เปลี่ยนรูป (ส่งเป็น multipart/form-data ด้วย fetch)
   async function handleFile(e) {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
@@ -106,7 +104,6 @@ export default function ProfilePage() {
         data.user.avatar = `${backend}${data.user.avatar}`;
       }
 
-      // อัปเดต localStorage + state ให้ UI แสดงค่าล่าสุดทันที
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
         setProfile((prev) => ({

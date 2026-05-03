@@ -1,36 +1,34 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useDonations } from "../context/DonationContext";
+
+// ✅ ย้ายมาไว้นอก component
+const formatDateTH = (date) => {
+  if (!date) return "-";
+  const d = new Date(date);
+
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+
+  return `${day}/${month}/${year}`;
+};
 
 const categories = ["All Donations", "Food Sharing", "Animal Food", "Organic Waste"];
 
 export default function BrowsePage() {
   const [activeCategory, setActiveCategory] = useState("All Donations");
-  const [donations, setDonations] = useState([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  //  ดึงข้อมูลจาก API
-  useEffect(() => {
-    async function fetchDonations() {
-      try {
-        const res = await fetch("/api/donations");
-        const data = await res.json();
-        setDonations(data || []);
-      } catch (error) {
-        console.error("Error fetching donations:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchDonations();
-  }, []);
+  const { donations } = useDonations();
 
-  //  กรองตาม category และ search
   const filteredDonations = donations.filter((donation) => {
     const matchCategory =
       activeCategory === "All Donations" ||
       donation.category === activeCategory;
+
     const text =
       (donation.title + " " + (donation.description || "")).toLowerCase();
+
     return matchCategory && text.includes(search.toLowerCase());
   });
 
@@ -67,11 +65,10 @@ export default function BrowsePage() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`flex-1 rounded-2xl px-4 py-2 text-sm font-semibold transition ${
-                activeCategory === cat
-                  ? "bg-white shadow-sm text-black"
-                  : "text-gray-700"
-              }`}
+              className={`flex-1 rounded-2xl px-4 py-2 text-sm font-semibold transition ${activeCategory === cat
+                ? "bg-white shadow-sm text-black"
+                : "text-gray-700"
+                }`}
             >
               {cat} (
               {cat === "All Donations"
@@ -83,18 +80,17 @@ export default function BrowsePage() {
         </div>
 
         {/* Donation Grid */}
-        {loading ? (
-          <p className="text-center text-gray-500">Loading...</p>
-        ) : filteredDonations.length === 0 ? (
+        {filteredDonations.length === 0 ? (
           <p className="text-center text-gray-500">No donations found.</p>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredDonations.map((donation) => {
-              const id = donation._id || donation.id;
+              const id = donation.id;
               const img =
                 donation.images?.[0] ||
                 donation.image ||
                 "/placeholder.jpg";
+
               return (
                 <div
                   key={id}
@@ -113,19 +109,24 @@ export default function BrowsePage() {
                       {donation.category}
                     </span>
                   </div>
+
                   <div className="p-5">
                     <h3 className="text-lg font-semibold text-gray-900">
                       {donation.title}
                     </h3>
+
                     <div className="mt-1 flex items-center gap-2 text-sm text-gray-700">
                       <span>{donation.donorName || "Anonymous"}</span>
                     </div>
+
                     <div className="mt-3 space-y-1 text-sm text-gray-600">
                       <p>📍 {donation.address || "-"}</p>
                       <p>📦 {donation.quantity || "-"}</p>
-                      <p>🗓️ Exp: {donation.expDate || "-"}</p>
+                      <p>🗓️ Exp: {formatDateTH(donation.expDate)}</p>
+                      <p>📅 Prod: {formatDateTH(donation.productionDate)}</p>
                       <p>⏰ Pickup: {donation.timeStart || "-"}</p>
                     </div>
+
                     <div className="mt-4 flex gap-3">
                       <button className="w-1/2 rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         View Details

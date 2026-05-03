@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useDonations } from "../context/DonationContext";
+import Cropper from "react-easy-crop";
 
 export default function CreateDonationPage() {
   const [selectedCategory, setSelectedCategory] = useState("Food Sharing");
@@ -15,6 +17,9 @@ export default function CreateDonationPage() {
     images: [],
   });
   const [submitting, setSubmitting] = useState(false);
+
+  const [previewImages, setPreviewImages] = useState([]);
+  const [showPreview, setShowPreview] = useState(false);
 
   const categories = [
     {
@@ -36,31 +41,62 @@ export default function CreateDonationPage() {
   };
 
   const handleImageChange = (e) => {
-    setForm({ ...form, images: Array.from(e.target.files) });
+    const files = Array.from(e.target.files);
+
+    setForm({ ...form, images: files });
+
+    const previews = files.map((file) => URL.createObjectURL(file));
+
+    setPreviewImages(previews);
+
+    setShowPreview(true);
   };
 
-  const onSubmit = async (e) => {
+  const { addDonation } = useDonations();
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitting(true);
-    try {
-      const fd = new FormData();
-      fd.append("category", selectedCategory);
-      Object.entries(form).forEach(([k, v]) => {
-        if (k !== "images") fd.append(k, v ?? "");
-      });
-      (form.images || []).forEach((file) => fd.append("images", file));
 
-      const res = await fetch("/api/donations", { method: "POST", body: fd });
-      if (!res.ok) throw new Error("Failed to create donation");
+    const newDonation = {
+      id: Date.now().toString(),
+      title: form.title,
+      description: form.description,
+      category: selectedCategory,
+      quantity: form.quantity,
 
-      alert("Donation created successfully!");
-      window.location.href = "/my-donations";
-    } catch (err) {
-      alert("❌ Error: " + err.message);
-    } finally {
-      setSubmitting(false);
-    }
+      productionDate: form.prodDate,
+      expDate: form.expDate,
+      timeStart: form.timeStart,
+      timeEnd: form.timeEnd,
+      address: form.address,
+
+      userId: "user123",
+      status: "active",
+    };
+
+    addDonation(newDonation);
+
+    console.log("เพิ่มแล้ว:", newDonation);
+
+    setForm({
+      title: "",
+      description: "",
+      foodType: "",
+      quantity: "",
+      prodDate: "",
+      expDate: "",
+      address: "",
+      timeStart: "",
+      timeEnd: "",
+      images: [],
+    });
+
+    setSubmitting(false);
   };
+
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
 
   return (
     <div className="min-h-screen bg-emerald-50 py-10 px-4 flex justify-center">
@@ -87,18 +123,16 @@ export default function CreateDonationPage() {
                 key={cat.name}
                 type="button"
                 onClick={() => setSelectedCategory(cat.name)}
-                className={`border rounded-2xl p-4 text-left transition ${
-                  selectedCategory === cat.name
-                    ? "border-2 border-emerald-600 bg-emerald-50"
-                    : "border-gray-200 hover:bg-gray-50"
-                }`}
+                className={`border rounded-2xl p-4 text-left transition ${selectedCategory === cat.name
+                  ? "border-2 border-emerald-600 bg-emerald-50"
+                  : "border-gray-200 hover:bg-gray-50"
+                  }`}
               >
                 <h3
-                  className={`font-semibold text-lg ${
-                    selectedCategory === cat.name
-                      ? "text-emerald-700"
-                      : "text-gray-800"
-                  }`}
+                  className={`font-semibold text-lg ${selectedCategory === cat.name
+                    ? "text-emerald-700"
+                    : "text-gray-800"
+                    }`}
                 >
                   {cat.name}
                 </h3>
@@ -110,7 +144,7 @@ export default function CreateDonationPage() {
 
         {/* Donation Details */}
         <form
-          onSubmit={onSubmit}
+          onSubmit={handleSubmit}
           className="bg-white rounded-2xl shadow-md p-6 space-y-6"
         >
           <div>
@@ -310,16 +344,55 @@ export default function CreateDonationPage() {
             <button
               type="submit"
               disabled={submitting}
-              className={`px-6 py-2 rounded-xl text-white font-semibold ${
-                submitting
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-emerald-600 hover:bg-emerald-700"
-              }`}
+              className={`px-6 py-2 rounded-xl text-white font-semibold ${submitting
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-emerald-600 hover:bg-emerald-700"
+                }`}
             >
               {submitting ? "Submitting..." : "Create Donation"}
             </button>
           </div>
         </form>
+        {showPreview && previewImages[0] && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 max-w-lg w-full">
+
+              <h2 className="text-lg font-semibold mb-4">
+                ปรับรูปภาพ
+              </h2>
+
+              <div className="relative w-full h-64 bg-black rounded-lg overflow-hidden">
+                <Cropper
+                  image={previewImages[0]}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1} // วงกลม/สี่เหลี่ยมจัตุรัส
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                />
+              </div>
+
+              {/* slider */}
+              <input
+                type="range"
+                min={1}
+                max={3}
+                  step={0.1}
+                value={zoom}
+                onChange={(e) => setZoom(e.target.value)}
+                className="w-full mt-4"
+              />
+
+              <button
+                onClick={() => setShowPreview(false)}
+                className="mt-4 w-full bg-emerald-600 text-white py-2 rounded-xl hover:bg-emerald-700"
+              >
+                ตกลง
+              </button>
+
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

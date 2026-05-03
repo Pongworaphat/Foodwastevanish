@@ -23,7 +23,7 @@ router.get('/profile', verifyToken, async (req, res) => {
   }
 });
 
-router.put('/profile', verifyToken, async (req, res) => {
+router.put('/profile', verifyToken, upload.single("avatar"), async (req, res) => {
   try {
     const userId = req.user?.id || req.userId;
 
@@ -31,19 +31,22 @@ router.put('/profile', verifyToken, async (req, res) => {
     if (req.body.profile && typeof req.body.profile === 'object') {
       Object.assign(payload, req.body.profile);
     }
-
     Object.assign(payload, req.body);
 
     const updates = {};
+
     if (payload.name !== undefined) updates.username = payload.name;
     if (payload.username !== undefined) updates.username = payload.username;
     if (payload.email !== undefined) updates.email = String(payload.email).toLowerCase();
     if (payload.phone !== undefined) {
-      // เก็บเฉพาะตัวเลขและเครื่องหมาย + (if any)
       updates.phone = String(payload.phone).replace(/[^\d+]/g, '');
     }
     if (payload.about !== undefined) {
       updates.about = String(payload.about).slice(0, 500);
+    }
+
+    if (req.file) {
+      updates.avatar = `/uploads/${req.file.filename}`;
     }
 
     if (Object.keys(updates).length === 0) {

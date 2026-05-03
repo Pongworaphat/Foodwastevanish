@@ -30,7 +30,11 @@ app.get("/", (req, res) => res.send("Backend running"));
 
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
 
-app.use("/uploads", express.static("uploads"));
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    message: "Something went wrong"
+  });
+});
 
-app.use("/api/users", require("./routes/user"));
 
