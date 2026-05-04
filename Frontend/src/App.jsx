@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar/navbar";
 import HomePage from "./pages/HomePage";
 import BrowsePage from "./pages/BrowsePage";
-import MydonationsPage from "./pages/MydonationsPage";
+import MydonationsPage from "./pages/MyDonationsPage";
 import ReceivedPage from "./pages/ReceivedPage";
 import CreateDonationPage from "./pages/CreateDonationPage";
 import SigninPage from "./components/Navbar/Auth/SigninPage";
@@ -14,11 +14,14 @@ import SettingsPage from "./pages/SettingsPage";
 import HelpPage from "./pages/HelpPage";
 import FeedbackPage from "./pages/FeedbackPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { Toaster } from "react-hot-toast";
+
 
 function App() {
   return (
     <>
       <Navbar />
+      <Toaster position="top-right" />
       <div className="p-6">
         <Routes>
           {/* public routes */}

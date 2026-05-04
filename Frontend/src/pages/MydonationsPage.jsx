@@ -1,34 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDonations } from "../context/DonationContext";
 
 export default function MydonationsPage() {
   const [tab, setTab] = useState("Active");
   const [selectedDonation, setSelectedDonation] = useState(null);
-  const [myDonations, setMyDonations] = useState([]); 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // fetch data from backend
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/my-donations"); 
-        if (!res.ok) throw new Error("Failed to fetch donations");
-        const data = await res.json();
-        if (mounted) setMyDonations(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Error loading my donations:", err);
-        if (mounted) setMyDonations([]);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-    load();
-    return () => (mounted = false);
-  }, []);
+  const { donations } = useDonations();
+  const myDonations = donations.filter(
+    (d) => d.userId === "user123"
+  );
 
+  
   const counts = {
     Active: myDonations.filter((d) => (d.status || "Active") === "Active").length,
     "In Progress": myDonations.filter((d) => d.status === "In Progress").length,
@@ -41,13 +26,15 @@ export default function MydonationsPage() {
     return d.status === "Completed";
   });
 
-  
+
   const getImage = (d) => {
     if (d.images && d.images.length > 0) return d.images[0];
     if (d.image) return d.image;
     return "/placeholder.jpg";
   };
   const getAvatar = (d) => d.donorAvatar || "/src/assets/avatars/default-avatar.jpg";
+
+  
 
   return (
     <div className="min-h-screen bg-emerald-50">

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useDonations } from "../context/DonationContext";
 
-// ✅ ย้ายมาไว้นอก component
 const formatDateTH = (date) => {
   if (!date) return "-";
   const d = new Date(date);
@@ -13,13 +12,18 @@ const formatDateTH = (date) => {
   return `${day}/${month}/${year}`;
 };
 
-const categories = ["All Donations", "Food Sharing", "Animal Food", "Organic Waste"];
+const categories = [
+  "All Donations",
+  "Food Sharing",
+  "Animal Food",
+  "Organic Waste",
+];
 
 export default function BrowsePage() {
   const [activeCategory, setActiveCategory] = useState("All Donations");
   const [search, setSearch] = useState("");
 
-  const { donations } = useDonations();
+  const { donations, claimDonation } = useDonations();
 
   const filteredDonations = donations.filter((donation) => {
     const matchCategory =
@@ -131,9 +135,20 @@ export default function BrowsePage() {
                       <button className="w-1/2 rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         View Details
                       </button>
-                      <button className="w-1/2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
-                        Claim
-                      </button>
+
+                      {donation.status === "claimed" ? (
+                        <button
+                          className="w-1/2 bg-gray-400 text-white px-4 py-2 rounded-xl" disabled>
+                          Claimed
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => claimDonation(donation.id, "user123")}
+                          className="w-1/2 bg-emerald-600 text-white px-4 py-2 rounded-xl"
+                        >
+                          Claim
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

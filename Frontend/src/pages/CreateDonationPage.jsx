@@ -42,13 +42,13 @@ export default function CreateDonationPage() {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
+    if (!files.length) return;
 
     setForm({ ...form, images: files });
 
     const previews = files.map((file) => URL.createObjectURL(file));
 
     setPreviewImages(previews);
-
     setShowPreview(true);
   };
 
@@ -56,6 +56,12 @@ export default function CreateDonationPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!finalImage && !previewImages[0]) {
+      alert("กรุณาใส่รูปก่อน");
+      return;
+    }
+
     setSubmitting(true);
 
     const newDonation = {
@@ -70,6 +76,8 @@ export default function CreateDonationPage() {
       timeStart: form.timeStart,
       timeEnd: form.timeEnd,
       address: form.address,
+
+      image: finalImage || previewImages[0],
 
       userId: "user123",
       status: "active",
@@ -92,11 +100,54 @@ export default function CreateDonationPage() {
       images: [],
     });
 
+    setPreviewImages([]);
+    setFinalImage(null);
+
     setSubmitting(false);
   };
 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+
+  const createImage = (url) =>
+    new Promise((resolve, reject) => {
+      const image = new Image();
+      image.addEventListener("load", () => resolve(image));
+      image.addEventListener("error", (error) => reject(error));
+      image.setAttribute("crossOrigin", "anonymous");
+      image.src = url;
+    });
+
+
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [finalImage, setFinalImage] = useState(null);
+  const getCroppedImg = async (imageSrc, croppedAreaPixels) => {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = croppedAreaPixels.width;
+    canvas.height = croppedAreaPixels.height;
+
+    ctx.drawImage(
+      image,
+      croppedAreaPixels.x,
+      croppedAreaPixels.y,
+      croppedAreaPixels.width,
+      croppedAreaPixels.height,
+      0,
+      0,
+      croppedAreaPixels.width,
+      croppedAreaPixels.height
+    );
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(URL.createObjectURL(blob));
+      }, "image/jpeg");
+    });
+  };
+
 
   return (
     <div className="min-h-screen bg-emerald-50 py-10 px-4 flex justify-center">
@@ -262,12 +313,34 @@ export default function CreateDonationPage() {
                     className="hidden"
                     id="image-upload"
                   />
+
                   <label htmlFor="image-upload" className="cursor-pointer">
                     Click to upload or drag and drop <br />
                     <span className="text-xs text-gray-400">
                       PNG, JPG up to 10MB
                     </span>
                   </label>
+
+                  {(finalImage || previewImages[0]) && (
+                    <div className="flex flex-col items-center mt-4 gap-2">
+                      <img
+                        src={finalImage || previewImages[0]}
+                        className="h-40 object-cover rounded-xl border"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFinalImage(null);
+                          setPreviewImages([]);
+                          setForm((prev) => ({ ...prev, images: [] }));
+                        }}
+                        className="text-sm text-red-500 hover:underline"
+                      >
+                        ลบรูป
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -353,47 +426,69 @@ export default function CreateDonationPage() {
             </button>
           </div>
         </form>
-        {showPreview && previewImages[0] && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl p-6 max-w-lg w-full">
+        {
+          showPreview && previewImages[0] && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl p-6 max-w-lg w-full">
 
-              <h2 className="text-lg font-semibold mb-4">
-                ปรับรูปภาพ
-              </h2>
+                <h2 className="text-lg font-semibold mb-4">
+                  ปรับรูปภาพ
+                </h2>
 
-              <div className="relative w-full h-64 bg-black rounded-lg overflow-hidden">
-                <Cropper
-                  image={previewImages[0]}
-                  crop={crop}
-                  zoom={zoom}
-                  aspect={1} // วงกลม/สี่เหลี่ยมจัตุรัส
-                  onCropChange={setCrop}
-                  onZoomChange={setZoom}
-                />
-              </div>
+                <div className="relative w-full h-64 bg-black rounded-lg overflow-hidden">
+                  <Cropper
+                    image={previewImages[0]}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={1}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={(_, croppedAreaPixels) => {
+                      setCroppedAreaPixels(croppedAreaPixels);
+                    }}
+                    objectFit="cover"
+                  />
+                </div>
 
-              {/* slider */}
-              <input
-                type="range"
-                min={1}
-                max={3}
+                {/* slider */}
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
                   step={0.1}
-                value={zoom}
-                onChange={(e) => setZoom(e.target.value)}
-                className="w-full mt-4"
-              />
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="w-full mt-4"
+                />
 
-              <button
-                onClick={() => setShowPreview(false)}
-                className="mt-4 w-full bg-emerald-600 text-white py-2 rounded-xl hover:bg-emerald-700"
-              >
-                ตกลง
-              </button>
+                <button
+                  onClick={async () => {
+                    if (!croppedAreaPixels) return;
 
+                    const cropped = await getCroppedImg(
+                      previewImages[0],
+                      croppedAreaPixels
+                    );
+
+                    setFinalImage(cropped);
+
+                    setForm((prev) => ({
+                      ...prev,
+                      images: [cropped],
+                    }));
+
+                    setShowPreview(false);
+                  }}
+                  className="mt-4 w-full bg-emerald-600 text-white py-2 rounded-xl hover:bg-emerald-700"
+                >
+                  ตกลง
+                </button>
+
+              </div>
             </div>
-          </div>
-        )}
-      </div>
-    </div>
+          )
+        }
+      </div >
+    </div >
   );
 }

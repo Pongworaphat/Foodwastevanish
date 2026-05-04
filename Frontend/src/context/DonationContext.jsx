@@ -11,8 +11,28 @@ export const DonationProvider = ({ children }) => {
     setDonations((prev) => [...prev, donation]);
   };
 
+  const claimDonation = (id, userId) => {
+    setDonations((prev) =>
+      prev.map((d) =>
+        d.id === id
+          ? { ...d, claimedBy: userId, status: "claimed" }
+          : d
+      )
+    );
+  };
+
+  const completeDonation = (id) => {
+    setDonations(prev =>
+      prev.map(d =>
+        d.id === id
+          ? { ...d, status: "completed" }
+          : d
+      )
+    );
+  };
+
   return (
-    <DonationContext.Provider value={{ donations, addDonation }}>
+    <DonationContext.Provider value={{ donations, addDonation, claimDonation, completeDonation }}>
       {children}
     </DonationContext.Provider>
   );
