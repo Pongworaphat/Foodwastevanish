@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "react-easy-crop": "^5.5.7"
+    "react-easy-crop": "^5.5.7",
+    "react-hot-toast": "^2.6.0"
   }
 }
