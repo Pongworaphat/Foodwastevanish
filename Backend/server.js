@@ -4,18 +4,20 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
+const chatRoutes = require("./routes/chat");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/api/user", userRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+const donationRoutes = require("./routes/donation");
 
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("MongoDB connected"))
@@ -24,7 +26,10 @@ mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     process.exit(1);
   });
 
+app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/donations", donationRoutes);
+app.use("/api/chats", chatRoutes);
 
 app.get("/", (req, res) => res.send("Backend running"));
 
