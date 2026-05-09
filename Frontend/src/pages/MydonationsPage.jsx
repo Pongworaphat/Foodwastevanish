@@ -10,14 +10,14 @@ export default function MydonationsPage() {
 
   const { donations } = useDonations();
   const myDonations = donations.filter(
-    (d) => d.userId === "user123"
+    d.userId === JSON.parse(localStorage.getItem("user"))?._id
   );
 
-  
+
   const counts = {
-    Active: myDonations.filter((d) => (d.status || "Active") === "Active").length,
-    "In Progress": myDonations.filter((d) => d.status === "In Progress").length,
-    Completed: myDonations.filter((d) => d.status === "Completed").length,
+    available: myDonations.filter((d) => d.status === "available").length,
+    claimed: myDonations.filter((d) => d.status === "claimed").length,
+    completed: myDonations.filter((d) => d.status === "completed").length,
   };
 
   const filtered = myDonations.filter((d) => {
@@ -34,7 +34,7 @@ export default function MydonationsPage() {
   };
   const getAvatar = (d) => d.donorAvatar || "/src/assets/avatars/default-avatar.jpg";
 
-  
+
 
   return (
     <div className="min-h-screen bg-emerald-50">
@@ -133,7 +133,7 @@ export default function MydonationsPage() {
                       </div>
                       <div className="mt-4">
                         <button
-                          onClick={() => setSelectedDonation(d)}
+                          onClick={() => setSelectedDonation(donation)}
                           className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                         >
                           View Details

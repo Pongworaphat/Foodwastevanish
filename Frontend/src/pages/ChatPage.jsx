@@ -1,10 +1,79 @@
-import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 
 export default function ChatPage() {
     const location = useLocation();
     const navigate = useNavigate();
     const donation = location.state?.donation;
+    const [messages, setMessages] = useState([]);
+    const [text, setText] = useState("");
+    const chatId = location.state?.chatId;
+
+    useEffect(() => {
+
+        if (!chatId) return;
+
+        fetchMessages();
+
+    }, [chatId]);
+
+    const fetchMessages = async () => {
+        try {
+
+            const token = localStorage.getItem("token");
+
+            const res = await fetch(
+                `http://localhost:5000/api/chats/${chatId}/messages`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            const data = await res.json();
+
+            setMessages(data);
+
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const sendMessage = async () => {
+
+        if (!text.trim()) return;
+
+        try {
+
+            const token = localStorage.getItem("token");
+
+            const res = await fetch(
+                `http://localhost:5000/api/chats/${chatId}/messages`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+
+                    body: JSON.stringify({
+                        text
+                    })
+                }
+            );
+
+            const data = await res.json();
+
+            setMessages((prev) => [...prev, data]);
+
+            setText("");
+
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     if (!donation) {
         return (
@@ -64,36 +133,56 @@ export default function ChatPage() {
                     </span>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-4 py-6 bg-gray-50">
-                    <div className="text-sm text-gray-500 text-center">
-                        Start chatting with the donor here...
-                    </div>
-                </div>
+                <div className="space-y-3">
 
-                {/* Message input */}
-                <div className="flex items-center gap-2 border-t bg-white px-4 py-3 flex-none">
-                    <input
-                        type="text"
-                        placeholder="Type your message..."
-                        className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                    <button className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700">
-                        ➤
-                    </button>
-                </div>
+                    {messages.map((msg) => (
 
-                {/* Donation info */}
-                <div className="flex items-center gap-3 border-t bg-gray-50 px-4 py-3 flex-none">
-                    <img
-                        src={donation.image}
-                        alt={donation.title}
-                        className="w-14 h-14 rounded-lg object-cover"
-                    />
-                    <div className="truncate">
-                        <div className="font-medium text-gray-900">{donation.title}</div>
-                        <div className="text-xs text-gray-500 truncate">
-                            {donation.address}
+                        <div
+                            key={msg._id}
+                            className="bg-white p-3 rounded-lg shadow-sm"
+                        >
+                            <div className="font-semibold text-sm text-emerald-700">
+                                {msg.sender.username}
+                            </div>
+
+                            <div className="text-sm text-gray-700">
+                                {msg.text}
+                            </div>
                         </div>
+
+                    ))}
+
+                </div>
+            </div>
+
+            {/* Message input */}
+            <div className="flex items-center gap-2 border-t bg-white px-4 py-3 flex-none">
+                <input
+                    type="text"
+                    placeholder="Type your message..."
+                    className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                />
+                <button
+                    onClick={sendMessage}
+                    className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700"
+                >
+                    ➤
+                </button>
+            </div>
+
+            {/* Donation info */}
+            <div className="flex items-center gap-3 border-t bg-gray-50 px-4 py-3 flex-none">
+                <img
+                    src={donation.image}
+                    alt={donation.title}
+                    className="w-14 h-14 rounded-lg object-cover"
+                />
+                <div className="truncate">
+                    <div className="font-medium text-gray-900">{donation.title}</div>
+                    <div className="text-xs text-gray-500 truncate">
+                        {donation.address}
                     </div>
                 </div>
             </div>

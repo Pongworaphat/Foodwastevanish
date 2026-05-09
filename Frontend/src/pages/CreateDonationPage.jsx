@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useDonations } from "../context/DonationContext";
 import Cropper from "react-easy-crop";
 
+
 export default function CreateDonationPage() {
   const [selectedCategory, setSelectedCategory] = useState("Food Sharing");
   const [form, setForm] = useState({
@@ -53,6 +54,7 @@ export default function CreateDonationPage() {
   };
 
   const { addDonation } = useDonations();
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -79,8 +81,9 @@ export default function CreateDonationPage() {
 
       image: finalImage || previewImages[0],
 
-      userId: "user123",
-      status: "active",
+      userId: JSON.parse(localStorage.getItem("user"))?._id,
+      status: "available",
+      avatar: JSON.parse(localStorage.getItem("user"))?.avatar || "",
     };
 
     addDonation(newDonation);

@@ -22,8 +22,8 @@ export const DonationProvider = ({ children }) => {
   };
 
   const completeDonation = (id) => {
-    setDonations(prev =>
-      prev.map(d =>
+    setDonations((prev) =>
+      prev.map((d) =>
         d.id === id
           ? { ...d, status: "completed" }
           : d

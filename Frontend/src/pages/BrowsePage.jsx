@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useDonations } from "../context/DonationContext";
+import { useNavigate } from "react-router-dom";
 
 const formatDateTH = (date) => {
   if (!date) return "-";
@@ -20,8 +21,11 @@ const categories = [
 ];
 
 export default function BrowsePage() {
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("All Donations");
   const [search, setSearch] = useState("");
+
+  const [selectedDonation, setSelectedDonation] = useState(null);
 
   const { donations, claimDonation } = useDonations();
 
@@ -33,7 +37,11 @@ export default function BrowsePage() {
     const text =
       (donation.title + " " + (donation.description || "")).toLowerCase();
 
-    return matchCategory && text.includes(search.toLowerCase());
+    return (
+      donation.status === "available" &&
+      matchCategory &&
+      text.includes(search.toLowerCase())
+    );
   });
 
   return (
@@ -58,6 +66,7 @@ export default function BrowsePage() {
             placeholder="Search donations..."
             className="w-full sm:w-96 rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-800 placeholder-gray-400 outline-none ring-emerald-200 focus:ring-2"
           />
+
           <button className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
             Most Recent ▼
           </button>
@@ -106,9 +115,11 @@ export default function BrowsePage() {
                       alt={donation.title}
                       className="h-full w-full object-cover"
                     />
+
                     <span className="absolute right-3 top-3 rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
                       {donation.status || "available"}
                     </span>
+
                     <span className="absolute left-3 top-3 rounded-md bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800">
                       {donation.category}
                     </span>
@@ -132,28 +143,98 @@ export default function BrowsePage() {
                     </div>
 
                     <div className="mt-4 flex gap-3">
-                      <button className="w-1/2 rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      <button
+                        className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        onClick={() => setSelectedDonation(donation)}
+                      >
                         View Details
                       </button>
-
-                      {donation.status === "claimed" ? (
-                        <button
-                          className="w-1/2 bg-gray-400 text-white px-4 py-2 rounded-xl" disabled>
-                          Claimed
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => claimDonation(donation.id, "user123")}
-                          className="w-1/2 bg-emerald-600 text-white px-4 py-2 rounded-xl"
-                        >
-                          Claim
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* MODAL */}
+        {selectedDonation && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-2xl shadow-lg w-[360px] md:w-[400px] max-h-[90vh] overflow-y-auto relative">
+              <img
+                src={
+                  selectedDonation.images?.[0] ||
+                  selectedDonation.image ||
+                  "/placeholder.jpg"
+                }
+                alt={selectedDonation.title}
+                className="w-full h-48 object-cover rounded-t-2xl"
+              />
+              <div className="absolute top-4 right-4 flex gap-2">
+                {selectedDonation.available && (
+                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">
+                    available
+                  </span>
+                )}
+                <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700">
+                  {selectedDonation.category}
+                </span>
+              </div>
+
+              <div className="p-5">
+                <h2 className="text-lg font-semibold text-gray-900 mb-1">{selectedDonation.title}</h2>
+                <p className="text-sm text-gray-600 mb-4">{selectedDonation.description}</p>
+
+                <div className="border rounded-lg p-3 mb-4">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={
+                        selectedDonation.avatar ||
+                        "https://ui-avatars.com/api/?name=User"
+                      }
+                      alt={selectedDonation.donorName}
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-800">{selectedDonation.donorName}</div>
+                      <div className="text-xs text-gray-500">
+                        ⭐ {selectedDonation.rating ?? "-"} rating • {selectedDonation.donationsMade ?? 0} donations made
+                      </div>
+                    </div>
+                    {selectedDonation.verified && (
+                      <div className="ml-auto rounded-md border px-2 py-1 text-xs font-medium text-gray-600">
+                        Verified
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-3 space-y-2 text-sm text-gray-600 mb-4">
+                  <div>Quantity & Type: {selectedDonation.quantity}</div>
+                  <div>Production Date: {selectedDonation.productionDate}</div>
+                  <div>Expiration Date: {selectedDonation.expirationDate}</div>
+                  <div>Pickup Location: {selectedDonation.address}</div>
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setSelectedDonation(null)}
+                    className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => {
+                      claimDonation(selectedDonation.id, "user123");
+                      setSelectedDonation(null);
+                    }}
+                    className="px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                  >
+                    Claim Donation
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

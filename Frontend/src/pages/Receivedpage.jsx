@@ -4,11 +4,12 @@ import toast from "react-hot-toast";
 
 export default function ReceivedPage() {
   const [tab, setTab] = useState("Pending");
+  const currentUser = JSON.parse(localStorage.getItem("user"));
 
   const { donations, completeDonation } = useDonations();
 
   const receivedList = donations.filter(
-    (d) => d.claimedBy === "user123"
+    (d) => d.claimedBy === currentUser?._id
   );
 
   const counts = {
@@ -20,6 +21,12 @@ export default function ReceivedPage() {
     tab === "Pending"
       ? d.status === "claimed"
       : d.status === "completed"
+  );
+
+  const myReceived = donations.filter(
+    (d) =>
+      d.claimedBy === currentUser?._id &&
+      d.status === "claimed"
   );
 
   const loading = false;
@@ -74,9 +81,8 @@ export default function ReceivedPage() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 min-w-[160px] text-center text-sm font-medium py-2 rounded-full transition ${
-                tab === t ? "bg-white shadow-sm text-gray-900" : "text-gray-600"
-              }`}
+              className={`flex-1 min-w-[160px] text-center text-sm font-medium py-2 rounded-full transition ${tab === t ? "bg-white shadow-sm text-gray-900" : "text-gray-600"
+                }`}
             >
               {t} ({counts[t]})
             </button>
@@ -112,11 +118,10 @@ export default function ReceivedPage() {
                   </span>
 
                   <span
-                    className={`absolute right-3 top-3 rounded-md px-2 py-1 text-xs font-medium ${
-                      item.status === "completed"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
+                    className={`absolute right-3 top-3 rounded-md px-2 py-1 text-xs font-medium ${item.status === "completed"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
+                      }`}
                   >
                     {item.status || "Pending"}
                   </span>
