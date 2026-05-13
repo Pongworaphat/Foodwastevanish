@@ -54,7 +54,7 @@ export default function CreateDonationPage() {
   };
 
   const { addDonation } = useDonations();
-  
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -83,7 +83,8 @@ export default function CreateDonationPage() {
 
       userId: JSON.parse(localStorage.getItem("user"))?._id,
       status: "available",
-      avatar: JSON.parse(localStorage.getItem("user"))?.avatar || "",
+      donorAvatar: JSON.parse(localStorage.getItem("user"))?.avatar || "",
+      donorName: JSON.parse(localStorage.getItem("user"))?.username || "Anonymous",
     };
 
     addDonation(newDonation);

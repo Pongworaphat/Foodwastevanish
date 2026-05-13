@@ -15,6 +15,7 @@ import HelpPage from "./pages/HelpPage";
 import FeedbackPage from "./pages/FeedbackPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Toaster } from "react-hot-toast";
+import EditDonationPage from "./pages/EditDonationPage";
 
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/feedback" element={<FeedbackPage />} />
+          <Route path="/edit-donation/:id" element={<EditDonationPage />} />
 
           {/* protected routes */}
           <Route

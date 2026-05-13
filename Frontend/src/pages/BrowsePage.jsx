@@ -107,7 +107,7 @@ export default function BrowsePage() {
               return (
                 <div
                   key={id}
-                  className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md"
+                  className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm  transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
                   <div className="relative h-48 w-full">
                     <img
@@ -125,16 +125,36 @@ export default function BrowsePage() {
                     </span>
                   </div>
 
+                  {/* card */}
                   <div className="p-5">
                     <h3 className="text-lg font-semibold text-gray-900">
                       {donation.title}
                     </h3>
 
-                    <div className="mt-1 flex items-center gap-2 text-sm text-gray-700">
-                      <span>{donation.donorName || "Anonymous"}</span>
+                    <div className="mt-3 flex items-center gap-3">
+
+                      <img
+                        src={
+                          donation.donorAvatar ||
+                          "https://ui-avatars.com/api/?name=User"
+                        }
+                        alt={donation.donorName}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+
+                      <div>
+                        <div className="font-medium text-gray-800">
+                          {donation.donorName || "Anonymous"}
+                        </div>
+
+                        <div className="text-xs text-gray-500">
+                          ⭐ {donation.rating ?? "-"}
+                        </div>
+                      </div>
+
                     </div>
 
-                    <div className="mt-3 space-y-1 text-sm text-gray-600">
+                    <div className="mt-3 space-y-2 text-sm text-gray-600">
                       <p>📍 {donation.address || "-"}</p>
                       <p>📦 {donation.quantity || "-"}</p>
                       <p>🗓️ Exp: {formatDateTH(donation.expDate)}</p>
@@ -159,8 +179,8 @@ export default function BrowsePage() {
 
         {/* MODAL */}
         {selectedDonation && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-2xl shadow-lg w-[360px] md:w-[400px] max-h-[90vh] overflow-y-auto relative">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-lg w-[380px] md:w-[440px] max-h-[90vh] overflow-y-auto relative">
               <img
                 src={
                   selectedDonation.images?.[0] ||
@@ -185,11 +205,11 @@ export default function BrowsePage() {
                 <h2 className="text-lg font-semibold text-gray-900 mb-1">{selectedDonation.title}</h2>
                 <p className="text-sm text-gray-600 mb-4">{selectedDonation.description}</p>
 
-                <div className="border rounded-lg p-3 mb-4">
+                <div className="rounded-2xl bg-gray-50 p-4 mb-4">
                   <div className="flex items-center gap-3">
                     <img
                       src={
-                        selectedDonation.avatar ||
+                        selectedDonation.donorAvatar ||
                         "https://ui-avatars.com/api/?name=User"
                       }
                       alt={selectedDonation.donorName}
@@ -197,8 +217,8 @@ export default function BrowsePage() {
                     />
                     <div>
                       <div className="font-medium text-gray-800">{selectedDonation.donorName}</div>
-                      <div className="text-xs text-gray-500">
-                        ⭐ {selectedDonation.rating ?? "-"} rating • {selectedDonation.donationsMade ?? 0} donations made
+                      <div className="text-xs text-gray-500 mt-1">
+                        ⭐ {selectedDonation.rating ?? "-"}
                       </div>
                     </div>
                     {selectedDonation.verified && (
@@ -209,11 +229,28 @@ export default function BrowsePage() {
                   </div>
                 </div>
 
-                <div className="border rounded-lg p-3 space-y-2 text-sm text-gray-600 mb-4">
-                  <div>Quantity & Type: {selectedDonation.quantity}</div>
-                  <div>Production Date: {selectedDonation.productionDate}</div>
-                  <div>Expiration Date: {selectedDonation.expirationDate}</div>
-                  <div>Pickup Location: {selectedDonation.address}</div>
+                <div className="rounded-2xl bg-gray-50 p-4 space-y-3 text-sm text-gray-600 mb-4">
+
+                  <div>
+                    📍 {selectedDonation.address}
+                  </div>
+
+                  <div>
+                    📦 {selectedDonation.quantity}
+                  </div>
+
+                  <div>
+                    🗓️ Exp: {formatDateTH(selectedDonation.expDate)}
+                  </div>
+
+                  <div>
+                    📅 Prod: {formatDateTH(selectedDonation.productionDate)}
+                  </div>
+
+                  <div>
+                    ⏰ Pickup: {selectedDonation.timeStart || "-"}
+                  </div>
+
                 </div>
 
                 <div className="flex justify-end gap-3">
@@ -226,6 +263,14 @@ export default function BrowsePage() {
                   <button
                     onClick={() => {
                       claimDonation(selectedDonation.id, "user123");
+
+                      navigate("/chat", {
+                        state: {
+                          donation: selectedDonation,
+                          chatId: selectedDonation.id
+                        }
+                      });
+
                       setSelectedDonation(null);
                     }}
                     className="px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
