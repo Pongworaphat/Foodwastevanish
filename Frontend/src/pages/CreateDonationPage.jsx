@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useDonations } from "../context/DonationContext";
 import Cropper from "react-easy-crop";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 
 export default function CreateDonationPage() {
@@ -21,6 +23,8 @@ export default function CreateDonationPage() {
 
   const [previewImages, setPreviewImages] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
+
+  const navigate = useNavigate();
 
   const categories = [
     {
@@ -70,8 +74,10 @@ export default function CreateDonationPage() {
       id: Date.now().toString(),
       title: form.title,
       description: form.description,
+      foodType: form.foodType,
       category: selectedCategory,
       quantity: form.quantity,
+
 
       productionDate: form.prodDate,
       expDate: form.expDate,
@@ -88,6 +94,7 @@ export default function CreateDonationPage() {
     };
 
     addDonation(newDonation);
+    toast.success("Donation created successfully 🎉");
 
     console.log("เพิ่มแล้ว:", newDonation);
 
@@ -108,6 +115,11 @@ export default function CreateDonationPage() {
     setFinalImage(null);
 
     setSubmitting(false);
+    navigate("/browse", {
+      state: {
+        successMessage: "Donation created successfully 🎉",
+      },
+    });
   };
 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -166,21 +178,29 @@ export default function CreateDonationPage() {
 
         {/* Category Selection */}
         <div className="bg-white rounded-2xl shadow-md p-6">
+
           <h2 className="text-lg font-semibold text-gray-800 mb-2">
             Select Category
           </h2>
+
           <p className="text-sm text-gray-600 mb-4">
+
             Choose the type of donation you want to create
           </p>
+
           <div className="grid sm:grid-cols-3 gap-4">
             {categories.map((cat) => (
               <button
                 key={cat.name}
                 type="button"
                 onClick={() => setSelectedCategory(cat.name)}
-                className={`border rounded-2xl p-4 text-left transition ${selectedCategory === cat.name
-                  ? "border-2 border-emerald-600 bg-emerald-50"
-                  : "border-gray-200 hover:bg-gray-50"
+                className={`border rounded-2xl p-4 text-left transition-all duration-200 ${selectedCategory === cat.name
+                  ? cat.name === "Food Sharing"
+                    ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md scale-[1.02]"
+                    : cat.name === "Animal Food"
+                      ? "border-orange-500 bg-orange-50 text-orange-700 shadow-md scale-[1.02]"
+                      : "border-lime-600 bg-lime-50 text-lime-700 shadow-md scale-[1.02]"
+                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:shadow-md hover:-translate-y-1"
                   }`}
               >
                 <h3
@@ -309,40 +329,59 @@ export default function CreateDonationPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Upload Images
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500 hover:border-emerald-300 transition">
+                <div className="border-2 border-dashed border-emerald-200 bg-emerald-50/30 rounded-xl p-6 text-center text-gray-500 hover:border-emerald-300 transition hover:scale-[1.02]">
                   <input
                     type="file"
                     multiple
                     onChange={handleImageChange}
                     className="hidden"
                     id="image-upload"
+                    key={previewImages.length}
                   />
 
-                  <label htmlFor="image-upload" className="cursor-pointer">
-                    Click to upload or drag and drop <br />
-                    <span className="text-xs text-gray-400">
-                      PNG, JPG up to 10MB
-                    </span>
-                  </label>
+                  {!finalImage && !previewImages[0] && (
+                    <>
+                      <div className="text-4xl mb-3">📷</div>
+
+                      <label htmlFor="image-upload" className="cursor-pointer">
+                        Click to upload or drag and drop <br />
+                        <span className="text-xs text-gray-400">
+                          PNG, JPG up to 10MB
+                        </span>
+                      </label>
+                    </>
+                  )}
 
                   {(finalImage || previewImages[0]) && (
-                    <div className="flex flex-col items-center mt-4 gap-2">
-                      <img
-                        src={finalImage || previewImages[0]}
-                        className="h-40 object-cover rounded-xl border"
-                      />
+                    <div className="mt-4 flex justify-center">
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFinalImage(null);
-                          setPreviewImages([]);
-                          setForm((prev) => ({ ...prev, images: [] }));
-                        }}
-                        className="text-sm text-red-500 hover:underline"
-                      >
-                        ลบรูป
-                      </button>
+                      <div className="relative group w-72 animate-fadeIn">
+
+                        <img
+                          src={finalImage || previewImages[0]}
+                          className="w-full h-72 object-cover rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl group-hover:shadow-xl transition-all duration-300"
+                        />
+
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-2xl transition-all duration-300" />
+
+                        <div className="absolute top-3 left-3 bg-emerald-500 text-white text-xs px-3 py-1 rounded-full shadow">
+                          Uploaded
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFinalImage(null);
+                            setPreviewImages([]);
+                            setForm((prev) => ({ ...prev, images: [] }));
+
+                            document.getElementById("image-upload").value = "";
+                          }}
+                          className="absolute bottom-3 right-3 bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-red-500 hover:text-white transition-all shadow-md"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -485,7 +524,7 @@ export default function CreateDonationPage() {
                   }}
                   className="mt-4 w-full bg-emerald-600 text-white py-2 rounded-xl hover:bg-emerald-700"
                 >
-                  ตกลง
+                  confirm
                 </button>
 
               </div>

@@ -31,8 +31,25 @@ export const DonationProvider = ({ children }) => {
     );
   };
 
+  const deleteDonation = (id) => {
+    setDonations((prev) =>
+      prev.filter((d) =>
+        (d._id || d.id) !== id
+      )
+    );
+  };
+
   return (
-    <DonationContext.Provider value={{ donations, addDonation, claimDonation, completeDonation }}>
+    <DonationContext.Provider
+      value={{
+        donations,
+        setDonations,
+        addDonation,
+        claimDonation,
+        completeDonation,
+        deleteDonation,
+      }}
+    >
       {children}
     </DonationContext.Provider>
   );

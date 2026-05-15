@@ -93,11 +93,21 @@ export default function ReceivedPage() {
         {loading ? (
           <p className="text-center text-gray-500 mt-10">Loading...</p>
         ) : filtered.length === 0 ? (
-          <p className="text-center text-gray-500 mt-10">
-            {tab === "Pending"
-              ? "No pending donations"
-              : "No completed donations yet"}
-          </p>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+
+            <div className="mb-4 text-6xl">
+              🎁
+            </div>
+
+            <h2 className="mb-2 text-2xl font-bold text-gray-800">
+              No received donations
+            </h2>
+
+            <p className="mb-6 text-gray-500">
+              Donations you claim will appear here
+            </p>
+
+          </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-6">
             {filtered.map((item) => (

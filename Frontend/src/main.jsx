@@ -4,13 +4,19 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
 import { DonationProvider } from "./context/DonationContext";
+import { Toaster } from "react-hot-toast";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <DonationProvider>
       <BrowserRouter>
+
+        <Toaster position="top-right" />
+
         <App />
+
       </BrowserRouter>
     </DonationProvider>
   </React.StrictMode>
 )
+

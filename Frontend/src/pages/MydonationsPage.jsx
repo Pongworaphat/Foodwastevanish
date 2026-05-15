@@ -1,22 +1,22 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDonations } from "../context/DonationContext";
+import toast from "react-hot-toast";
 
 
 export default function MydonationsPage() {
-  // ---------------- STATE ----------------
+
   const [tab, setTab] = useState("available");
   const [selectedDonation, setSelectedDonation] = useState(null);
   const [loading] = useState(false);
 
+
   const navigate = useNavigate();
 
-  // ---------------- DATA ----------------
-  const { donations } = useDonations();
+  const { donations, deleteDonation } = useDonations();
 
   const currentUser = JSON.parse(localStorage.getItem("user"));
 
-  // เอาเฉพาะ donation ของ user คนนี้
   const myDonations = donations.filter(
     (d) => d.userId === currentUser?._id
   );
@@ -33,7 +33,7 @@ export default function MydonationsPage() {
     return `${day}/${month}/${year}`;
   };
 
-  // ---------------- COUNTS ----------------
+
   const counts = {
     available: myDonations.filter((d) => d.status === "available").length,
     claimed: myDonations.filter((d) => d.status === "claimed").length,
@@ -45,16 +45,14 @@ export default function MydonationsPage() {
     (d) => d.status === tab
   );
 
-  // ---------------- HELPERS ----------------
 
-  // รูปอาหาร
   const getImage = (d) => {
     if (d.images && d.images.length > 0) return d.images[0];
     if (d.image) return d.image;
     return "/placeholder.jpg";
   };
 
-  // รูป avatar
+
   const getAvatar = (d) =>
     d.donorAvatar || "/src/assets/avatars/default-avatar.jpg";
 
@@ -173,8 +171,27 @@ export default function MydonationsPage() {
 
           ) : filtered.length === 0 ? (
 
-            <div className="text-center py-12 text-gray-500">
-              No {tab} donations.
+            <div className="flex flex-col items-center justify-center py-20 text-center col-span-full">
+
+              <div className="mb-4 text-6xl">
+                📦
+              </div>
+
+              <h2 className="mb-2 text-2xl font-bold text-gray-800">
+                No donations yet
+              </h2>
+
+              <p className="mb-6 text-gray-500">
+                Start sharing food with your community
+              </p>
+
+              <button
+                onClick={() => navigate("/donate")}
+                className="rounded-2xl bg-emerald-600 px-6 py-3 font-medium text-white transition-all duration-300 hover:scale-105 hover:bg-emerald-700"
+              >
+                Donate Food
+              </button>
+
             </div>
 
           ) : (
@@ -187,7 +204,7 @@ export default function MydonationsPage() {
 
                 <div
                   key={id}
-                  className="mb-6 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl" 
+                  className="mb-6 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
 
                   {/* ================= IMAGE ================= */}
@@ -304,7 +321,8 @@ export default function MydonationsPage() {
                       <button
                         onClick={() => {
                           if (window.confirm("Delete this donation?")) {
-                            console.log("delete", id);
+                            deleteDonation(id);
+                            toast.success("Donation deleted 🗑️");
                           }
                         }}
                         className="w-full rounded-xl bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 transition"
@@ -409,6 +427,9 @@ export default function MydonationsPage() {
               </div>
 
               {/* details */}
+              <h3 className="mb-2 text-sm font-semibold text-gray-800">
+                Donation Details
+              </h3>
               <div className="rounded-2xl bg-gray-50 p-4 space-y-3 text-sm text-gray-600 mb-4">
 
                 <div>

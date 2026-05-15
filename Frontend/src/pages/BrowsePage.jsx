@@ -1,24 +1,8 @@
 import React, { useState } from "react";
 import { useDonations } from "../context/DonationContext";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
-const formatDateTH = (date) => {
-  if (!date) return "-";
-  const d = new Date(date);
-
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-
-  return `${day}/${month}/${year}`;
-};
-
-const categories = [
-  "All Donations",
-  "Food Sharing",
-  "Animal Food",
-  "Organic Waste",
-];
 
 export default function BrowsePage() {
   const navigate = useNavigate();
@@ -26,6 +10,8 @@ export default function BrowsePage() {
   const [search, setSearch] = useState("");
 
   const [selectedDonation, setSelectedDonation] = useState(null);
+
+  const location = useLocation();
 
   const { donations, claimDonation } = useDonations();
 
@@ -44,17 +30,39 @@ export default function BrowsePage() {
     );
   });
 
+  const formatDateTH = (date) => {
+    if (!date) return "-";
+    const d = new Date(date);
+
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
+
+  const categories = [
+    "All Donations",
+    "Food Sharing",
+    "Animal Food",
+    "Organic Waste",
+  ];
+
   return (
     <div className="min-h-screen bg-emerald-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
+
         {/* Header */}
         <div className="mb-4">
+
           <h1 className="text-3xl font-semibold text-gray-900">
             Browse Donations
           </h1>
+
           <p className="text-gray-600">
             Find available food donations near you
           </p>
+          
         </div>
 
         {/* Search & Sort */}
@@ -94,14 +102,28 @@ export default function BrowsePage() {
 
         {/* Donation Grid */}
         {filteredDonations.length === 0 ? (
-          <p className="text-center text-gray-500">No donations found.</p>
+          <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+
+            <div className="mb-4 text-6xl">
+              🍱
+            </div>
+
+            <h2 className="mb-2 text-2xl font-bold text-gray-800">
+              No donations available
+            </h2>
+
+            <p className="mb-6 text-gray-500">
+              Check back later for new food donations
+            </p>
+
+          </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredDonations.map((donation) => {
               const id = donation.id;
               const img =
-                donation.images?.[0] ||
-                donation.image ||
+                donation.images?.[0] || donation.image
+              donation.image ||
                 "/placeholder.jpg";
 
               return (
@@ -158,8 +180,6 @@ export default function BrowsePage() {
                       <p>📍 {donation.address || "-"}</p>
                       <p>📦 {donation.quantity || "-"}</p>
                       <p>🗓️ Exp: {formatDateTH(donation.expDate)}</p>
-                      <p>📅 Prod: {formatDateTH(donation.productionDate)}</p>
-                      <p>⏰ Pickup: {donation.timeStart || "-"}</p>
                     </div>
 
                     <div className="mt-4 flex gap-3">
@@ -203,7 +223,7 @@ export default function BrowsePage() {
 
               <div className="p-5">
                 <h2 className="text-lg font-semibold text-gray-900 mb-1">{selectedDonation.title}</h2>
-                <p className="text-sm text-gray-600 mb-4">{selectedDonation.description}</p>
+                <p className="text-sm leading-relaxed text-gray-600 mb-5">{selectedDonation.description}</p>
 
                 <div className="rounded-2xl bg-gray-50 p-4 mb-4">
                   <div className="flex items-center gap-3">
@@ -228,6 +248,10 @@ export default function BrowsePage() {
                     )}
                   </div>
                 </div>
+
+                <h3 className="mb-2 text-sm font-semibold text-gray-800">
+                  Donation Details
+                </h3>
 
                 <div className="rounded-2xl bg-gray-50 p-4 space-y-3 text-sm text-gray-600 mb-4">
 
