@@ -4,7 +4,29 @@ export default function Homepage() {
   return (
     <div className="min-h-screen bg-emerald-50">
       <header className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-tr from-emerald-100 to-green-50"></div>
+        <div className="
+            absolute inset-0
+            bg-gradient-to-br
+            from-emerald-100
+            via-green-50
+            to-white
+            "></div>
+
+        <div className="
+              absolute top-0 left-0
+              w-96 h-96
+              bg-emerald-300/30
+              rounded-full blur-3xl
+              -translate-x-1/3 -translate-y-1/3
+              "></div>
+
+        <div className="
+              absolute bottom-0 right-0
+              w-[30rem] h-[30rem]
+              bg-green-200/30
+              rounded-full blur-3xl
+              translate-x-1/4 translate-y-1/4
+              "></div>
         <div className="relative max-w-7xl mx-auto px-6 lg:px-10 py-14 lg:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
 
@@ -14,7 +36,7 @@ export default function Homepage() {
               </p>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-tight tracking-tight text-emerald-900">
                 <span className="block">Share Food</span>
-                <span className="block text-emerald-600 mt-1">Share Love</span>
+                <span className="block mt-1 text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-green-400">Share Love</span>
               </h1>
               <p className="mt-6 text-lg text-emerald-900/80 max-w-xl">
                 เชื่อมโยงผู้บริจาคกับผู้รับเพื่อลดขยะอาหารและช่วยเหลือผู้ยากไร้ แบ่งปันอาหารส่วนเกิน

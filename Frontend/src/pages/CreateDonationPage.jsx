@@ -72,6 +72,7 @@ export default function CreateDonationPage() {
 
     const newDonation = {
       id: Date.now().toString(),
+      userId: "1",
       title: form.title,
       description: form.description,
       foodType: form.foodType,

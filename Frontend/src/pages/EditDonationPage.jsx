@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Cropper from "react-easy-crop";
 
 
+
 export default function EditDonationPage() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -118,6 +119,7 @@ export default function EditDonationPage() {
                 address: donation.address || "",
                 timeStart: donation.timeStart || "",
                 timeEnd: donation.timeEnd || "",
+                category: donation.category || "",
             });
         }
     }, [donation]);

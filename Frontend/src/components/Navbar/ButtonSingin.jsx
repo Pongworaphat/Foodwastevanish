@@ -2,19 +2,19 @@ import React from 'react';
 import styled from 'styled-components';
 
 const Button = () => {
-    return (
-        <StyledWrapper>
-            <div className="container">
-                <a href="#" className="button type--C">
-                    <div className="button__line" />
-                    <div className="button__line" />
-                    <span className="button__text">Sign in</span>
-                    <div className="button__drow1" />
-                    <div className="button__drow2" />
-                </a>
-            </div>
-        </StyledWrapper>
-    );
+  return (
+    <StyledWrapper>
+      <div className="container">
+        <div className="button type--C">
+          <div className="button__line" />
+          <div className="button__line" />
+          <span className="button__text">Sign in</span>
+          <div className="button__drow1" />
+          <div className="button__drow2" />
+        </div>
+      </div>
+    </StyledWrapper>
+  );
 }
 
 const StyledWrapper = styled.div`

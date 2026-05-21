@@ -19,6 +19,7 @@ export default function BrowsePage() {
     const matchCategory =
       activeCategory === "All Donations" ||
       donation.category === activeCategory;
+      if (donation.status !== "available") return false;
 
     const text =
       (donation.title + " " + (donation.description || "")).toLowerCase();
@@ -48,6 +49,22 @@ export default function BrowsePage() {
     "Organic Waste",
   ];
 
+  const getCategoryStyle = (category) => {
+    switch (category) {
+      case "Food Sharing":
+        return "bg-emerald-100 text-emerald-700";
+
+      case "Animal Food":
+        return "bg-orange-100 text-orange-700";
+
+      case "Organic Waste":
+        return "bg-lime-100 text-lime-700";
+
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-emerald-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -62,7 +79,7 @@ export default function BrowsePage() {
           <p className="text-gray-600">
             Find available food donations near you
           </p>
-          
+
         </div>
 
         {/* Search & Sort */}
@@ -142,7 +159,11 @@ export default function BrowsePage() {
                       {donation.status || "available"}
                     </span>
 
-                    <span className="absolute left-3 top-3 rounded-md bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800">
+                    <span
+                      className={`absolute left-3 top-3 rounded-md px-2 py-1 text-xs font-medium ${getCategoryStyle(
+                        donation.category
+                      )}`}
+                    >
                       {donation.category}
                     </span>
                   </div>
@@ -182,13 +203,49 @@ export default function BrowsePage() {
                       <p>🗓️ Exp: {formatDateTH(donation.expDate)}</p>
                     </div>
 
-                    <div className="mt-4 flex gap-3">
+                    <div className="mt-4 flex gap-2">
+
+                      {/* VIEW */}
                       <button
-                        className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         onClick={() => setSelectedDonation(donation)}
+                        className="
+                            flex-1 rounded-xl border border-gray-300
+                            bg-white px-4 py-2 text-sm text-gray-700
+                            hover:bg-gray-50 transition
+                          "
                       >
-                        View Details
+                        View
                       </button>
+
+                      {/* OWNER / CLAIM */}
+                      {donation.donorName === "MyMind" ? (
+
+                        <div
+                          className="
+                            flex-1 rounded-xl bg-gray-100
+                            px-4 py-2 text-center text-sm
+                            font-medium text-gray-400
+                          "
+                        >
+                          Your donation
+                        </div>
+
+                      ) : (
+
+                        <button
+                          onClick={() => claimDonation(donation.id)}
+                          className="
+                              flex-1 rounded-xl
+                              bg-emerald-500 hover:bg-emerald-600
+                              px-4 py-2 text-sm font-medium
+                              text-white transition
+                            "
+                        >
+                          Claim
+                        </button>
+
+                      )}
+
                     </div>
                   </div>
                 </div>
@@ -277,31 +334,29 @@ export default function BrowsePage() {
 
                 </div>
 
-                <div className="flex justify-end gap-3">
+                <div className="mt-4 flex justify-end gap-2">
+
                   <button
                     onClick={() => setSelectedDonation(null)}
-                    className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
+                    className="rounded-xl border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     Close
                   </button>
-                  <button
-                    onClick={() => {
-                      claimDonation(selectedDonation.id, "user123");
 
-                      navigate("/chat", {
-                        state: {
-                          donation: selectedDonation,
-                          chatId: selectedDonation.id
-                        }
-                      });
+                  {selectedDonation.donorName !== "MyMind" && (
+                    <button
+                      onClick={() => {
+                        claimDonation(selectedDonation.id);
+                        setSelectedDonation(null);
+                      }}
+                      className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                    >
+                      Claim Donation
+                    </button>
+                  )}
 
-                      setSelectedDonation(null);
-                    }}
-                    className="px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
-                  >
-                    Claim Donation
-                  </button>
                 </div>
+
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useDonations } from "../context/DonationContext";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function ReceivedPage() {
   const [tab, setTab] = useState("Pending");
@@ -17,12 +18,6 @@ export default function ReceivedPage() {
     Completed: receivedList.filter((d) => d.status === "completed").length,
   };
 
-  const filtered = receivedList.filter((d) =>
-    tab === "Pending"
-      ? d.status === "claimed"
-      : d.status === "completed"
-  );
-
   const myReceived = donations.filter(
     (d) =>
       d.claimedBy === currentUser?._id &&
@@ -30,6 +25,13 @@ export default function ReceivedPage() {
   );
 
   const loading = false;
+  const navigate = useNavigate();
+
+  const filtered = receivedList.filter((d) =>
+    tab === "Pending"
+      ? d.status === "claimed"
+      : d.status === "completed"
+  );
 
   return (
     <div className="min-h-screen bg-emerald-50">
@@ -96,7 +98,7 @@ export default function ReceivedPage() {
           <div className="flex flex-col items-center justify-center py-20 text-center">
 
             <div className="mb-4 text-6xl">
-              🎁
+              🌱
             </div>
 
             <h2 className="mb-2 text-2xl font-bold text-gray-800">
@@ -154,21 +156,18 @@ export default function ReceivedPage() {
 
                   {/* BUTTONS */}
                   <div className="mt-4 flex gap-3">
+
                     <button className="w-1/2 px-4 py-2 rounded-xl border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
                       View Details
                     </button>
 
-                    {item.status === "claimed" && (
-                      <button
-                        onClick={() => {
-                          completeDonation(item.id);
-                          toast.success("Donation completed 🎉");
-                        }}
-                        className="w-1/2 bg-green-600 text-white py-2 rounded-xl hover:bg-green-700 transition"
-                      >
-                        Complete
-                      </button>
-                    )}
+                    <button
+                      onClick={() => navigate("/chat", { state: { donation: item } })}
+                      className="w-1/2 bg-emerald-600 text-white py-2 rounded-xl hover:bg-emerald-700 transition"
+                    >
+                      Open Chat
+                    </button>
+
                   </div>
 
                   {/* COMPLETED TEXT */}

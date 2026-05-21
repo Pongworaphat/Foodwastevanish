@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDonations } from "../context/DonationContext";
 import toast from "react-hot-toast";
+import Swal from "sweetalert2";
 
 
 export default function MydonationsPage() {
@@ -55,6 +56,23 @@ export default function MydonationsPage() {
 
   const getAvatar = (d) =>
     d.donorAvatar || "/src/assets/avatars/default-avatar.jpg";
+
+  const getCategoryStyle = (category) => {
+    switch (category) {
+
+      case "Food Sharing":
+        return "bg-emerald-100 text-emerald-700";
+
+      case "Animal Food":
+        return "bg-orange-100 text-orange-700";
+
+      case "Organic Waste":
+        return "bg-lime-100 text-lime-700";
+
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
 
   return (
     <div className="min-h-screen bg-emerald-50">
@@ -217,7 +235,11 @@ export default function MydonationsPage() {
                     />
 
                     {/* category */}
-                    <div className="absolute left-3 top-3 rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700">
+                    <div
+                      className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-medium ${getCategoryStyle(
+                        d.category
+                      )}`}
+                    >
                       {d.category || "Category"}
                     </div>
 
@@ -320,11 +342,31 @@ export default function MydonationsPage() {
                       {/* delete */}
                       <button
                         onClick={() => {
-                          if (window.confirm("Delete this donation?")) {
-                            deleteDonation(id);
-                            toast.success("Donation deleted 🗑️");
-                          }
+
+                          Swal.fire({
+                            title: "Delete donation?",
+                            text: "This action cannot be undone.",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#10b981",
+                            cancelButtonColor: "#ef4444",
+                            confirmButtonText: "Yes, delete it",
+                            cancelButtonText: "Cancel",
+                            borderRadius: "20px",
+                          }).then((result) => {
+
+                            if (result.isConfirmed) {
+
+                              deleteDonation(id);
+
+                              toast.success("Donation deleted 🗑️");
+
+                            }
+
+                          });
+
                         }}
+
                         className="w-full rounded-xl bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 transition"
                       >
                         Delete
@@ -375,7 +417,11 @@ export default function MydonationsPage() {
               </div>
 
               {/* category */}
-              <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700">
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-medium ${getCategoryStyle(
+                  selectedDonation.category
+                )}`}
+              >
                 {selectedDonation.category}
               </span>
 
