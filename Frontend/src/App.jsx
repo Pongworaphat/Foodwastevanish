@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar/navbar";
 import HomePage from "./pages/HomePage";
 import BrowsePage from "./pages/BrowsePage";
@@ -14,86 +14,81 @@ import SettingsPage from "./pages/SettingsPage";
 import HelpPage from "./pages/HelpPage";
 import FeedbackPage from "./pages/FeedbackPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { Toaster } from "react-hot-toast";
 import EditDonationPage from "./pages/EditDonationPage";
-
-
 
 function App() {
   return (
     <>
       <Navbar />
-      <Toaster position="top-right" />
-      <div className="p-6">
-        <Routes>
-          {/* public routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/browse" element={<BrowsePage />} />
-          <Route path="/signin" element={<SigninPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/help" element={<HelpPage />} />
-          <Route path="/feedback" element={<FeedbackPage />} />
-          <Route path="/edit-donation/:id" element={<EditDonationPage />} />
+      
+      <Routes>
+        {/* public routes */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/browse" element={<BrowsePage />} />
+        <Route path="/signin" element={<SigninPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/help" element={<HelpPage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
+        <Route path="/edit-donation/:id" element={<EditDonationPage />} />
 
-          {/* protected routes */}
-          <Route
-            path="/donate"
-            element={
-              <ProtectedRoute>
-                <CreateDonationPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/mydonations"
-            element={
-              <ProtectedRoute>
-                <MydonationsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/received"
-            element={
-              <ProtectedRoute>
-                <ReceivedPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chat"
-            element={
-              <ProtectedRoute>
-                <ChatPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <MyActivitiesPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </div>
+        {/* protected routes */}
+        <Route
+          path="/donate"
+          element={
+            <ProtectedRoute>
+              <CreateDonationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mydonations"
+          element={
+            <ProtectedRoute>
+              <MydonationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/received"
+          element={
+            <ProtectedRoute>
+              <ReceivedPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <MyActivitiesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
     </>
   );
 }

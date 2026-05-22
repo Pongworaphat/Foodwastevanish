@@ -72,13 +72,12 @@ export default function CreateDonationPage() {
 
     const newDonation = {
       id: Date.now().toString(),
-      userId: "1",
+
       title: form.title,
       description: form.description,
       foodType: form.foodType,
       category: selectedCategory,
       quantity: form.quantity,
-
 
       productionDate: form.prodDate,
       expDate: form.expDate,
@@ -89,10 +88,17 @@ export default function CreateDonationPage() {
       image: finalImage || previewImages[0],
 
       userId: JSON.parse(localStorage.getItem("user"))?._id,
+
       status: "available",
-      donorAvatar: JSON.parse(localStorage.getItem("user"))?.avatar || "",
-      donorName: JSON.parse(localStorage.getItem("user"))?.username || "Anonymous",
+
+      donorAvatar:
+        JSON.parse(localStorage.getItem("user"))?.avatar || "",
+
+      donorName:
+        JSON.parse(localStorage.getItem("user"))?.username || "Anonymous",
     };
+
+
 
     addDonation(newDonation);
     toast.success("Donation created successfully 🎉");
