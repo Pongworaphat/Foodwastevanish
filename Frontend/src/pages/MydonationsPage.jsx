@@ -19,7 +19,7 @@ export default function MydonationsPage() {
   const currentUser = JSON.parse(localStorage.getItem("user"));
 
   const myDonations = donations.filter(
-    (d) => d.userId === currentUser?._id
+    (d) => d.donor?._id === currentUser?._id
   );
 
   const formatDateTH = (date) => {
@@ -48,14 +48,27 @@ export default function MydonationsPage() {
 
 
   const getImage = (d) => {
-    if (d.images && d.images.length > 0) return d.images[0];
-    if (d.image) return d.image;
+
+    if (d.image) {
+      return d.image.startsWith("/")
+        ? `http://localhost:5000${d.image}`
+        : d.image;
+    }
+
     return "/placeholder.jpg";
   };
 
 
-  const getAvatar = (d) =>
-    d.donorAvatar || "/src/assets/avatars/default-avatar.jpg";
+  const getAvatar = (d) => {
+    if (!d.donor?.avatar) {
+      return "/src/assets/avatars/default-avatar.jpg";
+    }
+
+    return d.donor.avatar.startsWith("/")
+      ? `http://localhost:5000${d.donor.avatar}`
+      : d.donor.avatar;
+  };
+
 
   const getCategoryStyle = (category) => {
     switch (category) {
@@ -270,14 +283,14 @@ export default function MydonationsPage() {
 
                       <img
                         src={getAvatar(d)}
-                        alt={d.donorName}
-                        className="h-8 w-8 rounded-full object-cover"
+                        alt={d.donor?.username}
+                        className="h-10 w-10 rounded-full object-cover"
                       />
 
                       <div className="flex-1">
 
                         <div className="text-sm font-medium text-gray-800">
-                          {d.donorName || "You"}
+                          {d.donor?.username || "You"}
                         </div>
 
                         <div className="mt-0.5 text-xs text-gray-500">
@@ -299,7 +312,7 @@ export default function MydonationsPage() {
                     <div className="mt-3 text-sm text-gray-600 space-y-1">
 
                       <div>
-                        📍 {d.address}
+                        📍 {d.pickupLocation}
                       </div>
 
                       <div>
@@ -353,15 +366,50 @@ export default function MydonationsPage() {
                             confirmButtonText: "Yes, delete it",
                             cancelButtonText: "Cancel",
                             borderRadius: "20px",
-                          }).then((result) => {
+                          }).then(async (result) => {
 
                             if (result.isConfirmed) {
 
-                              deleteDonation(id);
+                              try {
 
-                              toast.success("Donation deleted 🗑️");
+                                const token =
+                                  localStorage.getItem("authToken");
+
+                                const res = await fetch(
+                                  `http://localhost:5000/api/donations/${id}`,
+                                  {
+                                    method: "DELETE",
+                                    headers: {
+                                      Authorization: `Bearer ${token}`,
+                                    },
+                                  }
+                                );
+
+                                const data = await res.json();
+
+                                if (!res.ok) {
+                                  throw new Error(
+                                    data.message || "Delete failed"
+                                  );
+                                }
+
+                                deleteDonation(id);
+
+                                toast.success("Donation deleted 🗑️");
+
+
+                              } catch (err) {
+
+
+                                console.error(err);
+
+                                toast.error("Delete failed");
+
+
+                              }
 
                             }
+
 
                           });
 
@@ -445,14 +493,14 @@ export default function MydonationsPage() {
 
                   <img
                     src={getAvatar(selectedDonation)}
-                    alt={selectedDonation.donorName}
+                    alt={selectedDonation.donor?.username}
                     className="h-10 w-10 rounded-full object-cover"
                   />
 
                   <div className="flex-1">
 
                     <div className="font-medium text-gray-800">
-                      {selectedDonation.donorName}
+                      {selectedDonation.donor?.username}
                     </div>
 
                     <div className="text-xs text-gray-500 mt-1">
@@ -479,7 +527,7 @@ export default function MydonationsPage() {
               <div className="rounded-2xl bg-gray-50 p-4 space-y-3 text-sm text-gray-600 mb-4">
 
                 <div>
-                  📍 {selectedDonation.address}
+                  📍 {selectedDonation.pickupLocation}
                 </div>
 
                 <div>
@@ -491,7 +539,7 @@ export default function MydonationsPage() {
                 </div>
 
                 <div>
-                  📅 Production Date: {selectedDonation.productionDate}
+                  📅 Prod: {formatDateTH(selectedDonation.productionDate)}
                 </div>
 
                 <div>
@@ -511,7 +559,7 @@ export default function MydonationsPage() {
                 </button>
 
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     navigate("/chat", {
                       state: {
                         donation: selectedDonation

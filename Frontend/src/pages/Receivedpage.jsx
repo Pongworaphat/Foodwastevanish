@@ -1,28 +1,22 @@
 import React, { useState } from "react";
 import { useDonations } from "../context/DonationContext";
-import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 export default function ReceivedPage() {
   const [tab, setTab] = useState("Pending");
+  const [selectedDonation, setSelectedDonation] = useState(null);
   const currentUser = JSON.parse(localStorage.getItem("user"));
 
-  const { donations, completeDonation } = useDonations();
+  const { donations } = useDonations();
 
   const receivedList = donations.filter(
-    (d) => d.claimedBy === currentUser?._id
+    (d) => (d.receiver?._id || d.receiver) === currentUser?._id
   );
 
   const counts = {
     Pending: receivedList.filter((d) => d.status === "claimed").length,
     Completed: receivedList.filter((d) => d.status === "completed").length,
   };
-
-  const myReceived = donations.filter(
-    (d) =>
-      d.claimedBy === currentUser?._id &&
-      d.status === "claimed"
-  );
 
   const loading = false;
   const navigate = useNavigate();
@@ -32,6 +26,20 @@ export default function ReceivedPage() {
       ? d.status === "claimed"
       : d.status === "completed"
   );
+
+  const formatDateTH = (date) => {
+
+    if (!date) return "-";
+
+    const d = new Date(date);
+
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
+
 
   return (
     <div className="min-h-screen bg-emerald-50">
@@ -120,7 +128,13 @@ export default function ReceivedPage() {
                 {/* IMAGE + BADGES */}
                 <div className="relative h-44 w-full">
                   <img
-                    src={item.images?.[0] || item.image || "/placeholder.jpg"}
+                    src={
+                      item.image
+                        ? item.image.startsWith("/")
+                          ? `http://localhost:5000${item.image}`
+                          : item.image
+                        : "/placeholder.jpg"
+                    }
                     alt={item.title}
                     className="h-full w-full object-cover"
                   />
@@ -150,14 +164,17 @@ export default function ReceivedPage() {
 
                   <div className="mt-3 text-sm text-gray-700 space-y-1">
                     <div>📦 {item.quantity || "-"}</div>
-                    <div>📍 {item.address || "-"}</div>
-                    <div>🗓️ Exp: {item.expDate || "-"}</div>
+                    <div>📍 {item.pickupLocation || "-"}</div>
+                    <div>🗓️ Exp: {formatDateTH(item.expDate)}</div>
                   </div>
 
                   {/* BUTTONS */}
                   <div className="mt-4 flex gap-3">
 
-                    <button className="w-1/2 px-4 py-2 rounded-xl border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
+                    <button
+                      onClick={() => setSelectedDonation(item)}
+                      className="w-1/2 px-4 py-2 rounded-xl border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"
+                    >
                       View Details
                     </button>
 
@@ -182,6 +199,90 @@ export default function ReceivedPage() {
           </div>
         )}
       </div>
+      {selectedDonation && (
+
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+
+          <div className="bg-white rounded-2xl shadow-lg w-[380px] md:w-[440px] max-h-[90vh] overflow-y-auto relative pb-5">
+
+            <img
+              src={
+                selectedDonation.image
+                  ? selectedDonation.image.startsWith("/")
+                    ? `http://localhost:5000${selectedDonation.image}`
+                    : selectedDonation.image
+                  : "/placeholder.jpg"
+              }
+              alt={selectedDonation.title}
+              className="w-full h-48 object-cover rounded-t-2xl"
+            />
+
+            <div className="p-5">
+
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                {selectedDonation.title}
+              </h2>
+
+              <p className="text-sm text-gray-600 mb-4">
+                {selectedDonation.description || "-"}
+              </p>
+
+              <div className="space-y-3 text-sm text-gray-700">
+
+                <div>
+                  📦 {selectedDonation.quantity || "-"}
+                </div>
+
+                <div>
+                  📍 {selectedDonation.pickupLocation || "-"}
+                </div>
+
+                <div>
+                  🗓️ Exp: {formatDateTH(selectedDonation.expDate)}
+                </div>
+
+                <div>
+                  📅 Prod: {formatDateTH(selectedDonation.productionDate)}
+                </div>
+
+                <div>
+                  ⏰ Pickup: {selectedDonation.timeStart || "-"}
+                </div>
+
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3">
+
+                <button
+                  onClick={() => setSelectedDonation(null)}
+                  className="px-4 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50"
+                >
+                  Close
+                </button>
+
+                <button
+                  onClick={() =>
+                    navigate("/chat", {
+                      state: {
+                        donation: selectedDonation,
+                      },
+                    })
+                  }
+                  className="px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                >
+                  Open Chat
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
     </div>
+
   );
 }

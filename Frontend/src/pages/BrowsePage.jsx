@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useDonations } from "../context/DonationContext";
-import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+
+const currentUser = JSON.parse(localStorage.getItem("user"));
 
 
 export default function BrowsePage() {
-  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("All Donations");
   const [search, setSearch] = useState("");
 
@@ -19,7 +19,7 @@ export default function BrowsePage() {
     const matchCategory =
       activeCategory === "All Donations" ||
       donation.category === activeCategory;
-      if (donation.status !== "available") return false;
+    if (donation.status !== "available") return false;
 
     const text =
       (donation.title + " " + (donation.description || "")).toLowerCase();
@@ -137,12 +137,12 @@ export default function BrowsePage() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredDonations.map((donation) => {
-              const id = donation.id;
-              const img =
-                donation.images?.[0] || donation.image
-              donation.image ||
-                "/placeholder.jpg";
-
+              const id = donation._id;
+              const img = donation.image
+                ? donation.image.startsWith("/")
+                  ? `http://localhost:5000${donation.image}`
+                  : donation.image
+                : "/placeholder.jpg";
               return (
                 <div
                   key={id}
@@ -178,16 +178,19 @@ export default function BrowsePage() {
 
                       <img
                         src={
-                          donation.donorAvatar ||
-                          "https://ui-avatars.com/api/?name=User"
+                          donation.donor?.avatar
+                            ? donation.donor?.avatar.startsWith("/")
+                              ? `http://localhost:5000${donation.donor?.avatar}`
+                              : donation.donor?.avatar
+                            : "https://ui-avatars.com/api/?name=User"
                         }
-                        alt={donation.donorName}
+                        alt={donation.donor?.username}
                         className="h-10 w-10 rounded-full object-cover"
                       />
 
                       <div>
                         <div className="font-medium text-gray-800">
-                          {donation.donorName || "Anonymous"}
+                          {donation.donor?.username || "Anonymous"}
                         </div>
 
                         <div className="text-xs text-gray-500">
@@ -198,7 +201,7 @@ export default function BrowsePage() {
                     </div>
 
                     <div className="mt-3 space-y-2 text-sm text-gray-600">
-                      <p>📍 {donation.address || "-"}</p>
+                      <p>📍 {donation.pickupLocation || "-"}</p>
                       <p>📦 {donation.quantity || "-"}</p>
                       <p>🗓️ Exp: {formatDateTH(donation.expDate)}</p>
                     </div>
@@ -218,7 +221,7 @@ export default function BrowsePage() {
                       </button>
 
                       {/* OWNER / CLAIM */}
-                      {donation.donorName === "MyMind" ? (
+                      {donation.donor?._id === currentUser?._id ? (
 
                         <div
                           className="
@@ -233,7 +236,7 @@ export default function BrowsePage() {
                       ) : (
 
                         <button
-                          onClick={() => claimDonation(donation.id)}
+                          onClick={() => claimDonation(id)}
                           className="
                               flex-1 rounded-xl
                               bg-emerald-500 hover:bg-emerald-600
@@ -260,9 +263,11 @@ export default function BrowsePage() {
             <div className="bg-white rounded-2xl shadow-lg w-[380px] md:w-[440px] max-h-[90vh] overflow-y-auto relative">
               <img
                 src={
-                  selectedDonation.images?.[0] ||
-                  selectedDonation.image ||
-                  "/placeholder.jpg"
+                  selectedDonation.image
+                    ? selectedDonation.image.startsWith("/")
+                      ? `http://localhost:5000${selectedDonation.image}`
+                      : selectedDonation.image
+                    : "/placeholder.jpg"
                 }
                 alt={selectedDonation.title}
                 className="w-full h-48 object-cover rounded-t-2xl"
@@ -286,14 +291,17 @@ export default function BrowsePage() {
                   <div className="flex items-center gap-3">
                     <img
                       src={
-                        selectedDonation.donorAvatar ||
-                        "https://ui-avatars.com/api/?name=User"
+                        selectedDonation.donor?.avatar
+                          ? selectedDonation.donor?.avatar.startsWith("/")
+                            ? `http://localhost:5000${selectedDonation.donor?.avatar}`
+                            : selectedDonation.donor?.avatar
+                          : "https://ui-avatars.com/api/?name=User"
                       }
-                      alt={selectedDonation.donorName}
+                      alt={selectedDonation.donor?.username}
                       className="h-10 w-10 rounded-full object-cover"
                     />
                     <div>
-                      <div className="font-medium text-gray-800">{selectedDonation.donorName}</div>
+                      <div className="font-medium text-gray-800">{selectedDonation.donor?.username}</div>
                       <div className="text-xs text-gray-500 mt-1">
                         ⭐ {selectedDonation.rating ?? "-"}
                       </div>
@@ -313,7 +321,7 @@ export default function BrowsePage() {
                 <div className="rounded-2xl bg-gray-50 p-4 space-y-3 text-sm text-gray-600 mb-4">
 
                   <div>
-                    📍 {selectedDonation.address}
+                    📍 {selectedDonation.pickupLocation}
                   </div>
 
                   <div>
@@ -343,10 +351,10 @@ export default function BrowsePage() {
                     Close
                   </button>
 
-                  {selectedDonation.donorName !== "MyMind" && (
+                  {selectedDonation.donor?._id !== currentUser?._id && (
                     <button
                       onClick={() => {
-                        claimDonation(selectedDonation.id);
+                        claimDonation(selectedDonation._id);
                         setSelectedDonation(null);
                       }}
                       className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"

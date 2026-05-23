@@ -1,9 +1,6 @@
 import React, { useState } from "react";
-import { useDonations } from "../context/DonationContext";
 import Cropper from "react-easy-crop";
-import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-
 
 export default function CreateDonationPage() {
   const [selectedCategory, setSelectedCategory] = useState("Food Sharing");
@@ -24,7 +21,6 @@ export default function CreateDonationPage() {
   const [previewImages, setPreviewImages] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
 
-  const navigate = useNavigate();
 
   const categories = [
     {
@@ -57,10 +53,8 @@ export default function CreateDonationPage() {
     setShowPreview(true);
   };
 
-  const { addDonation } = useDonations();
 
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!finalImage && !previewImages[0]) {
@@ -68,66 +62,72 @@ export default function CreateDonationPage() {
       return;
     }
 
-    setSubmitting(true);
-
-    const newDonation = {
-      id: Date.now().toString(),
-
-      title: form.title,
-      description: form.description,
-      foodType: form.foodType,
-      category: selectedCategory,
-      quantity: form.quantity,
-
-      productionDate: form.prodDate,
-      expDate: form.expDate,
-      timeStart: form.timeStart,
-      timeEnd: form.timeEnd,
-      address: form.address,
-
-      image: finalImage || previewImages[0],
-
-      userId: JSON.parse(localStorage.getItem("user"))?._id,
-
-      status: "available",
-
-      donorAvatar:
-        JSON.parse(localStorage.getItem("user"))?.avatar || "",
-
-      donorName:
-        JSON.parse(localStorage.getItem("user"))?.username || "Anonymous",
-    };
+    try {
 
 
+      setSubmitting(true);
 
-    addDonation(newDonation);
-    toast.success("Donation created successfully 🎉");
+      const formData = new FormData();
 
-    console.log("เพิ่มแล้ว:", newDonation);
+      formData.append("title", form.title);
+      formData.append("description", form.description);
+      formData.append("quantity", form.quantity);
 
-    setForm({
-      title: "",
-      description: "",
-      foodType: "",
-      quantity: "",
-      prodDate: "",
-      expDate: "",
-      address: "",
-      timeStart: "",
-      timeEnd: "",
-      images: [],
-    });
+      formData.append("category", selectedCategory);
 
-    setPreviewImages([]);
-    setFinalImage(null);
+      formData.append("pickupLocation", form.address);
 
-    setSubmitting(false);
-    navigate("/browse", {
-      state: {
-        successMessage: "Donation created successfully 🎉",
-      },
-    });
+      formData.append("pickupTime", form.timeStart);
+
+      formData.append("expDate", form.expDate);
+
+      if (form.images[0]) {
+        formData.append("image", form.images[0]);
+      }
+
+      const token = localStorage.getItem("authToken");
+      console.log(token);
+
+      const res = await fetch(
+        "http://localhost:5000/api/donations",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Create failed");
+      }
+
+      toast.success("Donation created successfully 🎉");
+
+      window.location.href = "/browse";
+
+
+    } catch (err) {
+
+
+      console.error(err);
+
+      toast.error("Create donation failed");
+
+
+    } finally {
+
+
+      setSubmitting(false);
+
+
+    }
   };
+
+
 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -140,7 +140,6 @@ export default function CreateDonationPage() {
       image.setAttribute("crossOrigin", "anonymous");
       image.src = url;
     });
-
 
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [finalImage, setFinalImage] = useState(null);
@@ -171,29 +170,30 @@ export default function CreateDonationPage() {
     });
   };
 
-
   return (
-    <div className="min-h-screen bg-emerald-50 py-10 px-4 flex justify-center">
-      <div className="w-full max-w-4xl space-y-6">
-        {/* Header */}
-        <div className="bg-emerald-100 text-center rounded-2xl py-6">
-          <h1 className="text-3xl font-bold text-gray-900">Create Donation</h1>
-          <p className="text-gray-700 mt-1">
+    <div className="min-h-screen bg-slate-50/60 font-sans text-slate-800 py-12 px-4 flex justify-center">
+      <div className="w-full max-w-4xl space-y-8">
+
+        {/* Header Section */}
+        <div className="text-center sm:text-left border-b border-gray-200/60 pb-6">
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-950 sm:text-5xl">
+            Create <span className="text-emerald-600 font-medium">Donation</span>
+          </h1>
+          <p className="mt-2 text-base text-slate-500">
             Share your food with the community
           </p>
         </div>
 
         {/* Category Selection */}
-        <div className="bg-white rounded-2xl shadow-md p-6">
-
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">
-            Select Category
-          </h2>
-
-          <p className="text-sm text-gray-600 mb-4">
-
-            Choose the type of donation you want to create
-          </p>
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-8">
+          <div className="mb-5">
+            <h2 className="text-xl font-bold tracking-tight text-slate-950">
+              Select Category
+            </h2>
+            <p className="text-sm text-slate-400 mt-0.5">
+              Choose the type of donation you want to create
+            </p>
+          </div>
 
           <div className="grid sm:grid-cols-3 gap-4">
             {categories.map((cat) => (
@@ -201,46 +201,43 @@ export default function CreateDonationPage() {
                 key={cat.name}
                 type="button"
                 onClick={() => setSelectedCategory(cat.name)}
-                className={`border rounded-2xl p-4 text-left transition-all duration-200 ${selectedCategory === cat.name
+                className={`border text-left p-5 rounded-2xl transition-all duration-300 relative overflow-hidden ${selectedCategory === cat.name
                   ? cat.name === "Food Sharing"
-                    ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md scale-[1.02]"
+                    ? "border-emerald-500 bg-emerald-50/40 text-emerald-900 ring-2 ring-emerald-500/20"
                     : cat.name === "Animal Food"
-                      ? "border-orange-500 bg-orange-50 text-orange-700 shadow-md scale-[1.02]"
-                      : "border-lime-600 bg-lime-50 text-lime-700 shadow-md scale-[1.02]"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:shadow-md hover:-translate-y-1"
+                      ? "border-amber-500 bg-amber-50/40 text-amber-900 ring-2 ring-amber-500/20"
+                      : "border-lime-600 bg-lime-50/40 text-lime-900 ring-2 ring-lime-600/20"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50"
                   }`}
               >
-                <h3
-                  className={`font-semibold text-lg ${selectedCategory === cat.name
-                    ? "text-emerald-700"
-                    : "text-gray-800"
-                    }`}
-                >
+                <h3 className="font-bold text-base tracking-tight mb-1">
                   {cat.name}
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">{cat.desc}</p>
+                <p className="text-xs text-slate-400 leading-relaxed">{cat.desc}</p>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Donation Details */}
+        {/* Donation Main Details Form */}
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl shadow-md p-6 space-y-6"
+          className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-8 space-y-8"
         >
           <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-2">
-              Donation Details
-            </h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Provide information about your donation
-            </p>
+            <div className="mb-6 border-b border-slate-50 pb-4">
+              <h2 className="text-xl font-bold tracking-tight text-slate-950">
+                Donation Details
+              </h2>
+              <p className="text-sm text-slate-400 mt-0.5">
+                Provide information about your donation
+              </p>
+            </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                  Title <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -248,49 +245,52 @@ export default function CreateDonationPage() {
                   value={form.title}
                   onChange={handleChange}
                   placeholder="e.g., Fresh Bread and Pastries"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-200"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 bg-slate-50/50 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                  Description <span className="text-rose-500">*</span>
                 </label>
                 <textarea
                   name="description"
                   value={form.description}
                   onChange={handleChange}
                   placeholder="Provide details about the food, its condition, and any special notes"
-                  rows="3"
+                  rows="4"
                   required
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-200"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 bg-slate-50/50 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 resize-none"
                 />
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                     Food Type
                   </label>
-                  <select
-                    name="foodType"
-                    value={form.foodType}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-200"
-                  >
-                    <option value="">Select food type</option>
-                    <option value="Cooked Food">Cooked Food</option>
-                    <option value="Bakery">Bakery</option>
-                    <option value="Fruits">Fruits</option>
-                    <option value="Vegetables">Vegetables</option>
-                    <option value="Dry Food">Dry Food</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      name="foodType"
+                      value={form.foodType}
+                      onChange={handleChange}
+                      className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 bg-slate-50/50 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 appearance-none"
+                    >
+                      <option value="">Select food type</option>
+                      <option value="Cooked Food">Cooked Food</option>
+                      <option value="Bakery">Bakery</option>
+                      <option value="Fruits">Fruits</option>
+                      <option value="Vegetables">Vegetables</option>
+                      <option value="Dry Food">Dry Food</option>
+                    </select>
+                    <span className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-xs text-slate-400">▼</span>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Quantity <span className="text-red-500">*</span>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Quantity <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -299,14 +299,14 @@ export default function CreateDonationPage() {
                     onChange={handleChange}
                     placeholder="e.g., 20 pieces, 5kg"
                     required
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-200"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 bg-slate-50/50 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
                   />
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                     Production Date
                   </label>
                   <input
@@ -314,12 +314,12 @@ export default function CreateDonationPage() {
                     name="prodDate"
                     value={form.prodDate}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-200"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 bg-slate-50/50 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                     Expiration Date
                   </label>
                   <input
@@ -327,16 +327,17 @@ export default function CreateDonationPage() {
                     name="expDate"
                     value={form.expDate}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-200"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 bg-slate-50/50 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
                   />
                 </div>
               </div>
 
+              {/* Upload Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                   Upload Images
                 </label>
-                <div className="border-2 border-dashed border-emerald-200 bg-emerald-50/30 rounded-xl p-6 text-center text-gray-500 hover:border-emerald-300 transition hover:scale-[1.02]">
+                <div className="border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-2xl p-8 text-center text-slate-500 transition-all hover:border-emerald-500/60 hover:bg-white group">
                   <input
                     type="file"
                     multiple
@@ -347,44 +348,34 @@ export default function CreateDonationPage() {
                   />
 
                   {!finalImage && !previewImages[0] && (
-                    <>
-                      <div className="text-4xl mb-3">📷</div>
-
-                      <label htmlFor="image-upload" className="cursor-pointer">
-                        Click to upload or drag and drop <br />
-                        <span className="text-xs text-gray-400">
-                          PNG, JPG up to 10MB
-                        </span>
-                      </label>
-                    </>
+                    <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center justify-center">
+                      <div className="text-4xl mb-3 bg-white shadow-sm border border-slate-100 p-3 rounded-full transition group-hover:scale-110">📸</div>
+                      <span className="text-sm font-semibold text-slate-800">Click to upload or drag and drop</span>
+                      <span className="text-xs text-slate-400 mt-1">PNG, JPG up to 10MB</span>
+                    </label>
                   )}
 
                   {(finalImage || previewImages[0]) && (
-                    <div className="mt-4 flex justify-center">
-
-                      <div className="relative group w-72 animate-fadeIn">
-
+                    <div className="flex justify-center">
+                      <div className="relative group w-72">
                         <img
                           src={finalImage || previewImages[0]}
-                          className="w-full h-72 object-cover rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl group-hover:shadow-xl transition-all duration-300"
+                          alt="preview"
+                          className="w-full h-64 object-cover rounded-2xl border border-slate-200 shadow-md transition-all duration-300"
                         />
-
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-2xl transition-all duration-300" />
-
-                        <div className="absolute top-3 left-3 bg-emerald-500 text-white text-xs px-3 py-1 rounded-full shadow">
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 rounded-2xl transition-all duration-200" />
+                        <div className="absolute top-3 left-3 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-lg shadow">
                           Uploaded
                         </div>
-
                         <button
                           type="button"
                           onClick={() => {
                             setFinalImage(null);
                             setPreviewImages([]);
                             setForm((prev) => ({ ...prev, images: [] }));
-
                             document.getElementById("image-upload").value = "";
                           }}
-                          className="absolute bottom-3 right-3 bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-red-500 hover:text-white transition-all shadow-md"
+                          className="absolute bottom-3 right-3 bg-white text-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold shadow-md hover:bg-rose-600 hover:text-white transition"
                         >
                           Remove
                         </button>
@@ -396,19 +387,21 @@ export default function CreateDonationPage() {
             </div>
           </div>
 
-          {/* Pickup Information */}
+          {/* Pickup Information Section */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-2">
-              Pickup Information
-            </h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Where and when can recipients collect the donation
-            </p>
+            <div className="mb-6 border-b border-slate-50 pb-4">
+              <h2 className="text-xl font-bold tracking-tight text-slate-950">
+                Pickup Information
+              </h2>
+              <p className="text-sm text-slate-400 mt-0.5">
+                Where and when can recipients collect the donation
+              </p>
+            </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Pickup Address <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                  Pickup Address <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -417,90 +410,91 @@ export default function CreateDonationPage() {
                   onChange={handleChange}
                   placeholder="Enter pickup location"
                   required
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-200"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 bg-slate-50/50 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
                 />
-                <p className="text-xs text-gray-400 mt-1">
-                  In a real implementation, this would use GPS/Maps to select
-                  location
+                <p className="text-xs text-slate-400 mt-1.5 italic">
+                  In a real implementation, this would use GPS/Maps to select location
                 </p>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                     Pickup Time Start
                   </label>
                   <input
                     type="time"
                     name="timeStart"
                     value={form.timeStart}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 bg-slate-50/50 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-200"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                     Pickup Time End
                   </label>
                   <input
                     type="time"
                     name="timeEnd"
                     value={form.timeEnd}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 bg-slate-50/50 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-200"
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          {/* Action Footer Buttons */}
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
             <button
               type="button"
               onClick={() => (window.location.href = "/")}
-              className="px-6 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+              className="px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 active:scale-98 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className={`px-6 py-2 rounded-xl text-white font-semibold ${submitting
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-emerald-600 hover:bg-emerald-700"
+              className={`px-6 py-2.5 rounded-xl text-sm font-semibold text-white shadow-md transition active:scale-98 ${submitting
+                ? "bg-slate-400 cursor-not-allowed"
+                : "bg-emerald-600 shadow-emerald-600/10 hover:bg-emerald-700"
                 }`}
             >
               {submitting ? "Submitting..." : "Create Donation"}
             </button>
           </div>
         </form>
-        {
-          showPreview && previewImages[0] && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl p-6 max-w-lg w-full">
 
-                <h2 className="text-lg font-semibold mb-4">
-                  ปรับรูปภาพ
-                </h2>
+        {/* Cropper Modal Backdrop Overlay */}
+        {showPreview && previewImages[0] && (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-slate-100 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+              <h2 className="text-lg font-bold text-slate-950 mb-1">
+                ปรับรูปภาพ
+              </h2>
 
-                <div className="relative w-full h-64 bg-black rounded-lg overflow-hidden">
-                  <Cropper
-                    image={previewImages[0]}
-                    crop={crop}
-                    zoom={zoom}
-                    aspect={1}
-                    onCropChange={setCrop}
-                    onZoomChange={setZoom}
-                    onCropComplete={(_, croppedAreaPixels) => {
-                      setCroppedAreaPixels(croppedAreaPixels);
-                    }}
-                    objectFit="cover"
-                  />
-                </div>
+              <div className="relative w-full h-64 bg-slate-950 rounded-2xl overflow-hidden shadow-inner">
+                <Cropper
+                  image={previewImages[0]}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={(_, croppedAreaPixels) => {
+                    setCroppedAreaPixels(croppedAreaPixels);
+                  }}
+                  objectFit="cover"
+                />
+              </div>
 
-                {/* slider */}
+              {/* Slider Controller */}
+              <div className="mt-4 flex items-center gap-3">
+                <span className="text-xs text-slate-400">🔎</span>
                 <input
                   type="range"
                   min={1}
@@ -508,37 +502,36 @@ export default function CreateDonationPage() {
                   step={0.1}
                   value={zoom}
                   onChange={(e) => setZoom(Number(e.target.value))}
-                  className="w-full mt-4"
+                  className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                 />
-
-                <button
-                  onClick={async () => {
-                    if (!croppedAreaPixels) return;
-
-                    const cropped = await getCroppedImg(
-                      previewImages[0],
-                      croppedAreaPixels
-                    );
-
-                    setFinalImage(cropped);
-
-                    setForm((prev) => ({
-                      ...prev,
-                      images: [cropped],
-                    }));
-
-                    setShowPreview(false);
-                  }}
-                  className="mt-4 w-full bg-emerald-600 text-white py-2 rounded-xl hover:bg-emerald-700"
-                >
-                  confirm
-                </button>
-
               </div>
+
+              <button
+                onClick={async () => {
+                  if (!croppedAreaPixels) return;
+
+                  const cropped = await getCroppedImg(
+                    previewImages[0],
+                    croppedAreaPixels
+                  );
+
+                  setFinalImage(cropped);
+
+                  setForm((prev) => ({
+                    ...prev,
+                    images: prev.images,
+                  }));
+
+                  setShowPreview(false);
+                }}
+                className="mt-6 w-full bg-slate-900 text-white text-sm font-semibold py-3 rounded-xl shadow-lg hover:bg-slate-800 transition active:scale-98"
+              >
+                confirm
+              </button>
             </div>
-          )
-        }
-      </div >
-    </div >
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

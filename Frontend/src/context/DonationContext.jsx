@@ -6,29 +6,34 @@ export const useDonations = () => useContext(DonationContext);
 
 export const DonationProvider = ({ children }) => {
 
-  const [donations, setDonations] = useState(() => {
+  const [donations, setDonations] = useState([]);
+  useEffect(() => {
 
-    const saved =
-      localStorage.getItem("donations");
+    const fetchDonations = async () => {
 
-    return saved ? JSON.parse(saved) : [];
+      try {
 
-  });
+        const res = await fetch(
+          "http://localhost:5000/api/donations"
+        );
 
-  // useEffect(() => {
+        const data = await res.json();
 
-  //   localStorage.setItem(
-  //     "donations",
-  //     JSON.stringify(donations)
-  //   );
+        setDonations(data);
 
-  // }, [donations]);
+      } catch (err) {
+
+        console.error("Fetch donations failed:", err);
+
+      }
+    };
+
+    fetchDonations();
+
+  }, []);
 
   const [notifications, setNotifications] = useState([]);
 
-  const addDonation = (donation) => {
-    setDonations((prev) => [...prev, donation]);
-  };
 
   const addNotification = (text, type = "default") => {
 
@@ -66,8 +71,8 @@ export const DonationProvider = ({ children }) => {
 
     setDonations((prev) =>
       prev.map((d) =>
-        d.id === id
-          ? { ...d, claimedBy: userId, status: "claimed" }
+        d._id === id
+          ? { ...d, receiver: userId, status: "claimed" }
           : d
       )
     );
@@ -82,7 +87,7 @@ export const DonationProvider = ({ children }) => {
 
     setDonations((prev) =>
       prev.map((d) =>
-        d.id === id
+        d._id === id
           ? { ...d, status: "completed" }
           : d
       )
@@ -102,7 +107,6 @@ export const DonationProvider = ({ children }) => {
       value={{
         donations,
         setDonations,
-        addDonation,
         claimDonation,
         completeDonation,
         deleteDonation,
