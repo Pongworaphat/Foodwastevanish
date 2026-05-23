@@ -6,12 +6,18 @@ exports.createDonation = async (req, res) => {
 
     const donation = await Donation.create({
       ...req.body,
+
+      image: req.file
+        ? `/uploads/${req.file.filename}`
+        : "",
+
       donor: req.user.id
     });
 
     res.status(201).json(donation);
 
   } catch (error) {
+    console.error(error.message);
     console.error(error);
     res.status(500).json({ message: "Create donation failed" });
   }
@@ -27,6 +33,7 @@ exports.getDonations = async (req, res) => {
     res.json(donations);
 
   } catch (error) {
+    console.error(error.message);
     console.error(error);
     res.status(500).json({ message: "Get donations failed" });
   }
@@ -40,6 +47,12 @@ exports.claimDonation = async (req, res) => {
     if (!donation) {
       return res.status(404).json({
         message: "Donation not found"
+      });
+    }
+
+    if (donation.donor.toString() === req.user.id) {
+      return res.status(400).json({
+        message: "You cannot claim your own donation"
       });
     }
 
@@ -71,5 +84,42 @@ exports.claimDonation = async (req, res) => {
     res.status(500).json({
       message: "Claim failed"
     });
+  }
+};
+
+exports.deleteDonation = async (req, res) => {
+  try {
+
+
+    const donation = await Donation.findById(req.params.id);
+
+    if (!donation) {
+      return res.status(404).json({
+        message: "Donation not found"
+      });
+    }
+
+    if (donation.donor.toString() !== req.user.id) {
+      return res.status(403).json({
+        message: "Unauthorized"
+      });
+    }
+
+    await donation.deleteOne();
+
+    res.json({
+      message: "Donation deleted"
+    });
+
+
+  } catch (error) {
+
+
+    console.error(error);
+
+    res.status(500).json({
+      message: "Delete failed"
+    });
+
   }
 };

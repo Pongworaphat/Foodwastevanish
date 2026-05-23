@@ -42,4 +42,16 @@ app.use((err, req, res, next) => {
   });
 });
 
+app.use((req, res) => {
+  res.status(404).json({
+    message: "Route not found",
+  });
+});
+
+const helmet = require("helmet");
+const morgan = require("morgan");
+
+app.use(helmet());
+app.use(morgan("dev"));
+
 
