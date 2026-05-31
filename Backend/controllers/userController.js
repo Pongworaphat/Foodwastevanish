@@ -1,14 +1,47 @@
 const User = require("../models/User");
+const Donation = require("../models/Donation");
 const bcrypt = require("bcryptjs");
 
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user?.id || req.userId).select("-password");
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
+    const userId = req.user?.id || req.userId;
+
+    const user = await User.findById(userId).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const donationsShared = await Donation.countDocuments({
+      donor: userId,
+    });
+
+    const completedDonations = await Donation.countDocuments({
+      donor: userId,
+      status: "completed",
+    });
+
+    const peopleHelped = completedDonations;
+
+    const trustScore = 0;
+
+    res.json({
+      user,
+      stats: {
+        donationsShared,
+        completedDonations,
+        peopleHelped,
+        trustScore,
+      },
+    });
+
   } catch (err) {
     console.error("getProfile error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({
+      message: "Server error",
+    });
   }
 };
 

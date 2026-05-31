@@ -1,4 +1,3 @@
-// แทนที่ไฟล์ Backend/routes/auth.js (หรือจุดที่ต้องการแก้)
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
@@ -9,7 +8,6 @@ const User = require("../models/User");
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   console.error('FATAL: JWT_SECRET not set in env. Set process.env.JWT_SECRET');
-  // ใน production ควร process.exit(1) เพื่อไม่ให้รันโดยไม่มี secret
 }
 
 router.post("/signup",

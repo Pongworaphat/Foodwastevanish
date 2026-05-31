@@ -26,7 +26,32 @@ const donationSchema = new mongoose.Schema({
     required: true
   },
 
+  latitude: {
+    type: Number,
+    default: null
+  },
+
+  longitude: {
+    type: Number,
+    default: null
+  },
+
   pickupTime: {
+    type: String,
+    default: ""
+  },
+
+  expDate: {
+    type: String,
+    default: ""
+  },
+
+  productionDate: {
+    type: String,
+    default: ""
+  },
+
+  pickupEndTime: {
     type: String,
     default: ""
   },
@@ -52,7 +77,26 @@ const donationSchema = new mongoose.Schema({
     type: String,
     enum: ["available", "claimed", "completed"],
     default: "available"
-  }
+  },
+
+  ownerConfirmed: {
+    type: Boolean,
+    default: false,
+  },
+
+  receiverConfirmed: {
+    type: Boolean,
+    default: false,
+  },
+
+  donorName: {
+    type: String,
+  },
+
+  donorAvatar: {
+    type: String,
+  },
+
 
 }, { timestamps: true });
 

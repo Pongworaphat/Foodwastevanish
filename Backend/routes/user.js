@@ -5,6 +5,7 @@ const verifyToken = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const auth = require("../middleware/auth");
 const { changePassword } = require("../controllers/userController");
+const Donation = require("../models/Donation");
 
 
 const router = express.Router();
@@ -14,12 +15,102 @@ router.put("/change-password", auth, changePassword);
 router.get('/profile', verifyToken, async (req, res) => {
   try {
     const userId = req.user?.id || req.userId;
+
     const user = await User.findById(userId).select('-password');
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json({ user });
+
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found'
+      });
+    }
+
+    const donationsShared = await Donation.countDocuments({
+      donor: userId
+    });
+
+    const completedDonations = await Donation.countDocuments({
+      donor: userId,
+      status: "completed"
+    });
+
+    const allUserDonations = await Donation.find({
+      donor: userId,
+    });
+
+    console.log(
+      allUserDonations.map(d => ({
+        title: d.title,
+        status: d.status
+      }))
+    );
+
+    const peopleHelped = completedDonations;
+
+    const trustScore = 0;
+
+    res.json({
+      user,
+      stats: {
+        donationsShared,
+        completedDonations,
+        peopleHelped,
+        trustScore,
+      },
+    });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+
+    res.status(500).json({
+      message: 'Server error'
+    });
+  }
+});
+
+router.get("/:id/public", async (req, res) => {
+  try {
+    console.log(req.params.id);
+    const userId = req.params.id;
+
+    const user = await User.findById(userId).select(
+      "username avatar about social createdAt"
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const donationsShared = await Donation.countDocuments({
+      donor: userId,
+    });
+
+    const completedDonations = await Donation.countDocuments({
+      donor: userId,
+      status: "completed",
+    });
+
+    const peopleHelped = completedDonations;
+
+    const trustScore = 0;
+
+    res.json({
+      ...user.toObject(),
+      stats: {
+        donationsShared,
+        completedDonations,
+        peopleHelped,
+        trustScore,
+      },
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message: "Server error",
+    });
   }
 });
 
@@ -43,6 +134,38 @@ router.put('/profile', verifyToken, upload.single("avatar"), async (req, res) =>
     }
     if (payload.about !== undefined) {
       updates.about = String(payload.about).slice(0, 500);
+    }
+
+    if (payload.city !== undefined) {
+      updates.city = String(payload.city);
+    }
+
+    if (payload.country !== undefined) {
+      updates.country = String(payload.country);
+    }
+
+    if (payload.campus !== undefined) {
+      updates.campus = String(payload.campus);
+    }
+
+    if (payload.building !== undefined) {
+      updates.building = String(payload.building);
+    }
+
+    if (payload.locationNote !== undefined) {
+      updates.locationNote = String(payload.locationNote);
+    }
+
+    if (payload.latitude !== undefined) {
+      updates.latitude = Number(payload.latitude);
+    }
+
+    if (payload.longitude !== undefined) {
+      updates.longitude = Number(payload.longitude);
+    }
+
+    if (payload.social !== undefined) {
+      updates.social = payload.social;
     }
 
     if (req.file) {

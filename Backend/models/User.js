@@ -5,13 +5,34 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
 
+
   avatar: {
     type: String,
     default: "/uploads/default-avatar.png"
   },
 
   phone: { type: String, default: "", trim: true },
-  about: { type: String, default: "", maxlength: 500 }
+  about: { type: String, default: "", maxlength: 500 },
+
+  campus: { type: String, default: "" },
+  building: { type: String, default: "" },
+  locationNote: { type: String, default: "" },
+
+  latitude: {
+    type: Number,
+    default: 13.1206,
+  },
+
+  longitude: {
+    type: Number,
+    default: 100.9185,
+  },
+
+  social: {
+    facebook: { type: String, default: "" },
+    instagram: { type: String, default: "" },
+    line: { type: String, default: "" },
+  },
 
 }, {
   timestamps: true
