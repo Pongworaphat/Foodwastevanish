@@ -79,7 +79,7 @@ export default function UserMenu({ onSignOut }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2.5 w-72 origin-top-right rounded-2xl border border-slate-100 bg-white p-2.5 shadow-xl shadow-slate-100/70 ring-1 ring-black/5 focus:outline-none animate-fadeIn z-50">
+        <div className="absolute right-0 mt-2.5 w-80 origin-top-right rounded-2xl border border-slate-100 bg-white p-2.5 shadow-xl shadow-slate-100/70 ring-1 ring-black/5 focus:outline-none animate-fadeIn z-50">
           
           
           <div className="flex items-center gap-3.5 px-3.5 py-3 bg-slate-50/60 rounded-xl mb-2 border border-slate-100/40">

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import bgImage from "../../../assets/imgfoodwaste/Gemini_Generated_Foodwastevanish.png";
+
 export default function SignupPage() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
@@ -9,7 +11,6 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
 
   const backend = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -69,93 +70,143 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-emerald-50">
-      <div className="bg-neutral-900 text-white shadow-lg rounded-2xl p-8 w-[380px]">
-        <h1 className="text-2xl font-bold text-center mb-6 whitespace-nowrap flex justify-center">
-          สมัครสมาชิก <span className="ml-1 text-green-400">FoodwasteVanish</span>
+    <div
+      className="relative min-h-screen flex items-center justify-center lg:justify-between px-6 lg:px-24 bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url(${bgImage})` }}
+    >
+
+      {/* SOFT BLUR OVERLAY */}
+      <div className="absolute inset-0 backdrop-blur-[2px] bg-black/10 z-0"></div>
+      
+      {/* DARK OVERLAY */}
+      <div div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent z-0" ></div >
+
+      {/* GLOW */}
+      <div div className="absolute left-[-150px] top-[120px] w-[500px] h-[500px] bg-emerald-400/20 blur-3xl rounded-full z-0 animate-pulse" ></div >
+
+      <div className="hidden lg:flex flex-col text-white max-w-2xl z-10 -mt-20">
+
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
+            <img
+              src="/src/assets/imgfoodwaste/Logofoodwaste.png"
+              alt="FoodwasteVanish Logo"
+              className="w-9 h-9 object-contain"
+            />
+          </div>
+
+          <div className="flex items-center text-3xl font-black tracking-tight">
+            <span className="text-white">Foodwaste</span>
+            <span className="text-emerald-400">Vanish</span>
+          </div>
+        </div>
+
+        <h1 className="text-7xl animate-[fadeIn_1.2s_ease-out] font-black tracking-tight leading-[0.9] text-white">
+          เริ่มต้นแบ่งปัน
+          <br />
+          <span className="text-emerald-400">อาหารส่วนเกิน</span>
+          <br />
+          ให้มีคุณค่า
         </h1>
 
+        <p className="mt-6 text-lg leading-relaxed max-w-xl text-white/80">
+          ร่วมเป็นส่วนหนึ่งในการลด Food Waste
+          และส่งต่ออาหารให้ผู้คนที่ต้องการ
+          และส่งต่ออาหารให้ผู้คนที่ต้องการ
+        </p>
+      </div>
+
+      {/* ส่วน Card ฟอร์มด้านขวา */}
+      <div className="relative z-10 w-full max-w-[420px] hover:scale-[1.01] transition-all duration-500 bg-white/10 backdrop-blur-md border border-white/20 rounded-[2.5rem] p-10 shadow-[0_8px_40px_rgba(0,0,0,0.45)] before:absolute before:inset-0 before:rounded-[2.5rem] before:border before:border-white/10 before:pointer-events-none">
+        <h2 className="text-3xl font-extrabold text-white text-center mb-8 drop-shadow-md">
+          สร้างบัญชีใหม่
+        </h2>
+
         <form onSubmit={handleSignup} className="space-y-4">
-          <input
-            type="text"
-            placeholder="ชื่อผู้ใช้งาน"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-            required
-          />
-
-          <input
-            type="email"
-            placeholder="อีเมล"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-            required
-          />
-
+          {/* ช่องชื่อผู้ใช้ */}
           <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            </div>
+            <input
+              type="text"
+              placeholder="ชื่อผู้ใช้"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full pl-12 pr-4 py-3.5 bg-white/10 border border-white/20 text-white placeholder-white/50 rounded-full focus:outline-none focus:border-emerald-400 focus:bg-white/15 transition"
+              required
+            />
+          </div>
+
+          {/* ช่องอีเมล */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+            </div>
+            <input
+              type="email"
+              placeholder="อีเมล"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full pl-12 pr-4 py-3.5 bg-white/10 border border-white/20 text-white placeholder-white/50 rounded-full focus:outline-none focus:border-emerald-400 focus:bg-white/15 transition"
+              required
+            />
+          </div>
+
+          {/* ช่องรหัสผ่าน */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            </div>
             <input
               type={showPassword ? "text" : "password"}
               placeholder="รหัสผ่าน"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 
-               focus:outline-none focus:ring-2 focus:ring-green-500 pr-12"
+              className="w-full pl-12 pr-12 py-3.5 bg-white/10 border border-white/20 text-white placeholder-white/50 rounded-full focus:outline-none focus:border-emerald-400 focus:bg-white/15 transition"
               required
             />
-
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-            >
-              {showPassword ? (
-                // ไอคอน hide (eye-slash)
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.45 10.45 0 001.5 12c2.1 4.085 6.56 7.5 10.5 7.5 1.65 0 3.3-.45 4.8-1.305M7.362 7.362A4.492 4.492 0 0112 7.5c2.485 0 4.5 2.015 4.5 4.5 0 .793-.21 1.536-.577 2.185M3 3l18 18" />
-                </svg>
-              ) : (
-                // ไอคอน show (eye)
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322c1.3 4.416 5.33 7.678 9.964 7.678 4.636 0 8.665-3.262 9.964-7.678C20.665 7.906 16.636 4.644 12 4.644c-4.635 0-8.664 3.262-9.964 7.678z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" />
-                </svg>
-              )}
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-700">
+              {showPassword ? <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg> : <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>}
             </button>
           </div>
 
-
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          {error && <p className="text-red-600 text-sm text-center font-bold">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-60"
+            className="w-full bg-gradient-to-r from-emerald-400 to-green-500 text-white font-bold text-lg py-3.5 rounded-full hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(16,185,129,0.45)] transition-all duration-300 disabled:opacity-70 mt-4"
           >
-            {loading ? "กำลังสมัคร..." : "สมัครสมาชิก"}
+            {loading ? "กำลังลงทะเบียน..." : "ลงทะเบียน"}
           </button>
-
-          <div className="mt-6 space-y-2">
-            <button type="button" className="w-full bg-neutral-800 text-white py-2 rounded-lg">
-              ดำเนินการต่อด้วย Facebook
-            </button>
-            <button type="button" className="w-full bg-neutral-800 text-white py-2 rounded-lg">
-              ดำเนินการต่อด้วย Google
-            </button>
-          </div>
         </form>
 
-        <p className="text-center text-sm text-gray-400 mt-6">
+        <div className="mt-8 flex justify-center gap-6">
+          <div className="flex flex-col items-center gap-2">
+            <button className="w-12 h-12 bg-white/10 border border-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition hover:-translate-y-1">
+              <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" className="w-6 h-6" />
+            </button>
+            <span className="text-xs text-white drop-shadow-md">Facebook</span>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <button className="w-12 h-12 bg-white/10 border border-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition hover:-translate-y-1">
+              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-6 h-6" />
+            </button>
+            <span className="text-xs text-white drop-shadow-md">Google</span>
+          </div>
+        </div>
+
+        <p className="text-center text-sm text-white mt-8 drop-shadow-sm">
           มีบัญชีอยู่แล้ว?{" "}
-          <span
-            onClick={() => navigate("/signin")}
-            className="text-green-400 cursor-pointer hover:underline"
-          >
+          <span onClick={() => navigate("/signin")} className="text-green-300 font-bold cursor-pointer hover:underline">
             เข้าสู่ระบบ
           </span>
         </p>
       </div>
-    </div>
+      <div className="absolute bottom-20 left-[30%] w-32 h-32 border border-white/10 rounded-full"></div>
+
+      <div className="absolute top-32 left-[45%] w-16 h-16 border border-white/10 rounded-full"></div>
+    </div >
   );
-} 
+}

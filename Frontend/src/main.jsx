@@ -5,6 +5,7 @@ import App from './App.jsx'
 import './index.css'
 import { DonationProvider } from "./context/DonationContext";
 import { Toaster } from "react-hot-toast";
+import "leaflet/dist/leaflet.css";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

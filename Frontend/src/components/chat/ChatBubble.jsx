@@ -1,199 +1,118 @@
-import { MoreHorizontal, Reply, Pencil, Undo2, } from "lucide-react";
+import React from "react";
+import { MoreHorizontal, Reply, Pencil, Undo2 } from "lucide-react";
 
-import { useState } from "react";
-
-const ChatBubble = ({ msg, isOwnMessage, setPreviewImage, activeMenuId, setActiveMenuId, setReplyingTo, setEditingMessage, setText, unsendMessage, }) => {
-    const hasImages = msg.images && msg.images.length > 0;
+const ChatBubble = ({
+    msg,
+    isOwnMessage,
+    setPreviewImage,
+    activeMenuId,
+    setActiveMenuId,
+    setReplyingTo,
+    setEditingMessage,
+    setText,
+    unsendMessage,
+}) => {
+    const hasImages = msg.images && Array.isArray(msg.images) && msg.images.length > 0;
 
     return (
-        <div
-            className={`flex mb-3 ${isOwnMessage ? "justify-end" : "justify-start"
-                }`}
-        >
-            <div className="max-w-[75%] flex flex-col relative group">
-
-
-                {activeMenuId !== msg.id && (
-                    <div
-                        className={`
-                            absolute top-1/2 -translate-y-1/2
-                            ${isOwnMessage ? "-left-20" : "-right-20"}
-                            transition
-                            flex items-center gap-1
-                        `}
-                    >
-
-                        {/* MENU */}
-                        <div className="relative group/more">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-
-                                    setActiveMenuId(
-                                        activeMenuId === msg.id
-                                            ? null
-                                            : msg.id
-                                    );
-                                }}
-                                className="w-8 h-8 rounded-full bg-white shadow-sm hover:bg-gray-100 flex items-center justify-center"
-                            >
-                                <MoreHorizontal size={18} />
-                            </button>
-
-                            <div
-                                className="
-                                absolute top-full mt-2 left-1/2 -translate-x-1/2
-                                px-3 py-1.5 rounded-xl
-                                bg-[#1f1f1f] text-white text-xs
-                                opacity-0 group-hover/more:opacity-100
-                                transition pointer-events-none
-                                whitespace-nowrap"
-                            >
-                                More
-                            </div>
-                        </div>
-
-                        {/* REPLY */}
-                        <div className="relative group/reply">
-
-                            <button
-                                onClick={() => setReplyingTo(msg)}
-                                className="w-8 h-8 rounded-full bg-white shadow-sm hover:bg-gray-100 flex items-center justify-center"
-                            >
-                                <Reply size={16} />
-                            </button>
-
-                            <div
-                                className="
-                                    absolute top-full mt-2 left-1/2 -translate-x-1/2
-                                    px-3 py-1.5 rounded-xl
-                                    bg-[#1f1f1f] text-white text-xs
-                                    opacity-0 group-hover/reply:opacity-100
-                                    transition pointer-events-none
-                                    whitespace-nowrap"
-                            >
-                                Reply
-                            </div>
-
-                        </div>
-
-                    </div>
-                )}
-
-                {activeMenuId === msg.id && (
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        className={`
-                            absolute top-1/2 -translate-y-1/2
-                            ${isOwnMessage ? "-left-48" : "-right-48"}
-                            w-44
-                            rounded-3xl
-                            bg-[#1f1f1f]
-                            text-white
-                            shadow-2xl
-                            overflow-hidden
-                            border border-white/10
-                            backdrop-blur-xl
-                            z-20
-                        `}
-                    >
-
+        <div className={`flex mb-3 ${isOwnMessage ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[75%] flex flex-col relative group ${isOwnMessage ? "items-end" : "items-start"}`}>
+                <div className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all flex items-center z-30 ${isOwnMessage ? "-left-10" : "-right-10"
+                    }`}>
+                    <div className="relative">
                         <button
-                            onClick={() => {
-                                setEditingMessage(msg);
-                                setText(msg.text);
-                                setActiveMenuId(null);
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId(activeMenuId === msg.id ? null : msg.id);
                             }}
-                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/10 transition text-sm"
+                            id="premium3dot"
+                            className="w-9 h-9 rounded-full bg-white/80 backdrop-blur-md border border-white shadow-md hover:scale-105 hover:bg-white transition-all flex items-center justify-center"
                         >
-                            Edit
-                            <Pencil size={16} />
+                            <MoreHorizontal size={14} />
                         </button>
 
-                        <button
-                            onClick={() => {
-                                unsendMessage(msg.id);
-                                setActiveMenuId(null);
-                            }}
-                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-red-500/10 transition text-sm text-red-400"
-                        >
-                            Unsend
-                            <Undo2 size={16} />
-                        </button>
-
-                    </div>
-                )}
-
-                {/* TEXT */}
-                {(msg.text || msg.replyTo) && (
-                    <div
-                        className={`px-4 py-2.5 rounded-2xl shadow-sm text-sm break-words whitespace-pre-wrap mb-1
-                                ${isOwnMessage
-                                ? "bg-emerald-500 text-white rounded-br-md"
-                                : "bg-white text-gray-800 border border-gray-200 rounded-bl-md"
-                            }
-                        `}
-                    >
-
-                        {msg.replyTo && (
-                            <div
-                                className={`
-                                mb-2 px-3 py-2 rounded-xl border-l-4 text-xs
-                                    ${isOwnMessage
-                                        ? "bg-white/20 border-white/40 text-white"
-                                        : "bg-gray-100 border-gray-300 text-gray-700"
-                                    }
-                                `}
-                            >
-                                <p className="font-semibold mb-1">
-                                    Reply
-                                </p>
-
-                                <p className="line-clamp-2 break-words">
-                                    {msg.replyTo.text || "Photo"}
-                                </p>
+                        {activeMenuId === msg.id && (
+                            <div className={`absolute top-full mt-2 z-50 w-36 rounded-2xl border border-white/60 bg-white/85 backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] p-2 text-sm animate-in fade-in zoom-in-95 duration-150 ${isOwnMessage ? "right-0" : "left-0"
+                                }`}>
+                                <button
+                                    onClick={() => {
+                                        setReplyingTo(msg);
+                                        setActiveMenuId(null);
+                                    }}
+                                    className="w-full px-3 py-2.5 rounded-xl text-left hover:bg-emerald-50 flex items-center gap-2 text-slate-700 hover:text-emerald-700 transition-all font-medium"
+                                >
+                                    <Reply size={14} /> Reply
+                                </button>
+                                {isOwnMessage && (
+                                    <>
+                                        <button
+                                            onClick={() => {
+                                                setEditingMessage(msg);
+                                                setText(msg.text);
+                                                setActiveMenuId(null);
+                                            }}
+                                            className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                                        >
+                                            <Pencil size={14} /> Edit
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                unsendMessage(msg.id);
+                                                setActiveMenuId(null);
+                                            }}
+                                            className="w-full px-3 py-2.5 rounded-xl text-left hover:bg-red-50 flex items-center gap-2 text-red-500 transition-all font-medium"
+                                        >
+                                            <Undo2 size={14} /> Unsend
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         )}
+                    </div>
+                </div>
 
-                        {msg.text}
-
+                {/* ส่วนแสดงข้อความ Reply */}
+                {msg.replyTo && (
+                    <div className="bg-slate-100 rounded-t-2xl px-3 py-2 text-xs text-gray-500 mb-[-4px] border-l-2 border-emerald-500 max-w-full truncate opacity-90">
+                        <span className="font-bold text-emerald-600 block text-[10px]">Replied to:</span>
+                        {msg.replyTo.text || "📷 Photo"}
                     </div>
                 )}
 
-                {/* IMAGES */}
+                {/* ส่วนแสดงเนื้อหาแชทหลัก */}
+                {msg.text && (
+                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-6 break-words max-w-full shadow-sm ${isOwnMessage
+                        ? "bg-emerald-500 text-white rounded-br-sm"
+                        : "bg-[#f4f4f5] text-gray-800 rounded-bl-sm"
+                        }`}>
+                        {msg.text}
+                    </div>
+                )}
+
+                {/* ส่วนแสดงรูปภาพแชท */}
                 {hasImages && (
-                    <div
-                        className={`overflow-hidden rounded-3xl grid gap-[2px] bg-transparent
-                            ${msg.images.length === 1
-                                ? "grid-cols-1"
-                                : "grid-cols-2"
-                            }
-                        `}
-                    >
+                    <div className={`mt-1 overflow-hidden rounded-2xl border bg-gray-100 ${msg.images.length > 1 ? "grid grid-cols-2 gap-1 w-[240px]" : "w-[200px]"
+                        }`}>
                         {msg.images.map((image, index) => (
                             <img
                                 key={index}
                                 src={image}
-                                alt="sent"
+                                onError={(e) => {
+                                    e.target.src = "https://placehold.co/600x400?text=Image+Not+Found";
+                                }}
+                                alt="sent chat"
                                 onClick={() => setPreviewImage(image)}
-                                className="w-full h-[180px] object-cover cursor-pointer hover:opacity-95 transition"
+                                className="w-full h-[150px] object-cover cursor-pointer hover:opacity-90 transition"
                             />
                         ))}
                     </div>
                 )}
 
-                {/* TIME */}
-                <div
-                    className={`
-                        text-[10px]
-                        text-gray-400
-                        mt-1
-                        px-1
-                        ${isOwnMessage ? "text-right" : "text-left"
-                        }
-                    `}
-                >
-                    {msg.edited && "Edited • "} {msg.time}
+                {/* TIME & STATUS */}
+                <div className={`text-[10px] text-gray-400 mt-1 px-1 ${isOwnMessage ? "text-right" : "text-left"}`}>
+                    {msg.edited && "Edited • "}
+                    {msg.time}
+                    {isOwnMessage && <span className="ml-1">• {msg.status}</span>}
                 </div>
             </div>
         </div>
@@ -201,4 +120,3 @@ const ChatBubble = ({ msg, isOwnMessage, setPreviewImage, activeMenuId, setActiv
 };
 
 export default ChatBubble;
-

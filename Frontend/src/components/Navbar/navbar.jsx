@@ -4,6 +4,8 @@ import NotificationBell from "./NotificationBell";
 import UserMenu from "./DropdownMenu/UserMenu";
 import ButtonSignIn from "./ButtonSingin";
 
+import logo from "../../assets/imgfoodwaste/Logofoodwaste.png";
+
 export default function Navbar() {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const location = useLocation();
@@ -12,7 +14,7 @@ export default function Navbar() {
   const checkSignedIn = () => {
     const token = localStorage.getItem("authToken");
     const user = localStorage.getItem("user");
-    setIsSignedIn(Boolean(token || user));
+    setIsSignedIn(Boolean(token && user));
   };
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export default function Navbar() {
       {/* Logo */}
       <Link to="/" className="flex items-center space-x-2 group">
         <div className="w-9 h-9 transition-transform duration-500 group-hover:rotate-12">
-          <img src="/src/assets/imgfoodwaste/Logofoodwaste.png" alt="logo" className="w-full h-full object-contain" />
+          <img src={logo} alt="logo" />
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center tracking-tight">
           <span className="font-black text-lg text-slate-800">Foodwaste</span>

@@ -1,113 +1,239 @@
-import { createContext, useState, useContext, useEffect, } from "react";
+import { createContext, useState, useContext, useEffect } from "react";
+import { db } from "../firebase";
+import {
+  doc,
+  onSnapshot,
+  setDoc,
+  serverTimestamp,
+  collection,
+  addDoc,
+  query,
+  where,
+  updateDoc,
+} from "firebase/firestore";
 
 const DonationContext = createContext();
 
 export const useDonations = () => useContext(DonationContext);
 
 export const DonationProvider = ({ children }) => {
+  const [backendDonations, setBackendDonations] = useState([]);
+  const [overrides, setOverrides] = useState({}); // สเตตเก็บสัญญาณปุ่มกดเรียลไทม์ข้ามบราวเซอร์
+  const [notifications, setNotifications] = useState([]);
+  const currentUser =
+    JSON.parse(localStorage.getItem("user") || "null");
 
-  const [donations, setDonations] = useState([]);
   useEffect(() => {
+    if (!currentUser?._id) return;
 
-    const fetchDonations = async () => {
+    const q = query(
+      collection(db, "notifications"),
+      where("userId", "==", currentUser._id)
+    );
 
-      try {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-        const res = await fetch(
-          "http://localhost:5000/api/donations"
-        );
+      data.sort(
+        (a, b) =>
+          (b.createdAt?.seconds || 0) -
+          (a.createdAt?.seconds || 0)
+      );
 
-        const data = await res.json();
+      setNotifications(data);
+    });
 
-        setDonations(data);
-
-      } catch (err) {
-
-        console.error("Fetch donations failed:", err);
-
-      }
-    };
-
-    fetchDonations();
-
+    return () => unsubscribe();
   }, []);
 
-  const [notifications, setNotifications] = useState([]);
-
-
-  const addNotification = (text, type = "default") => {
-
-    const newNotification = {
-      id: Date.now(),
-      text,
-      read: false,
-      type,
-      createdAt: Date.now(),
-    };
-
-    setNotifications((prev) => [
-      newNotification,
-      ...prev,
-    ].slice(0, 10));
+  const fetchDonations = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/donations");
+      const data = await res.json();
+      setBackendDonations(data);
+    } catch (err) {
+      console.error("Fetch donations failed:", err);
+    }
   };
 
-  const markAllNotificationsAsRead = () => {
+  useEffect(() => {
+    fetchDonations();
 
-    setNotifications((prev) =>
-      prev.map((notification) => ({
-        ...notification,
-        read: true,
-      }))
+    const unsubscribe = onSnapshot(
+      doc(db, "realtime", "donations"),
+      () => {
+        fetchDonations();
+      }
     );
 
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "donation_status"), (snapshot) => {
+      const newOverrides = {};
+      snapshot.docs.forEach((doc) => {
+        newOverrides[doc.id] = doc.data();
+      });
+      setOverrides(newOverrides);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const donations = backendDonations.map((d) => {
+    const id = d._id || d.id;
+    if (overrides[id]) {
+      return { ...d, ...overrides[id] };
+    }
+    return d;
+  });
+
+  const addNotification = async (
+    userId,
+    text,
+    type = "default"
+  ) => {
+    try {
+      await addDoc(
+        collection(db, "notifications"),
+        {
+          userId,
+          text,
+          type,
+          read: false,
+          createdAt: serverTimestamp(),
+        }
+      );
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const claimDonation = (id, userId) => {
+  const markAllNotificationsAsRead = async () => {
+    try {
 
-    addNotification(
-      "Someone claimed your donation 🤝",
-      "claim"
-    );
+      const unread = notifications.filter((n) => !n.read);
 
-    setDonations((prev) =>
-      prev.map((d) =>
-        d._id === id
-          ? { ...d, receiver: userId, status: "claimed" }
-          : d
-      )
-    );
+      await Promise.all(
+        unread.map((n) =>
+          updateDoc(
+            doc(db, "notifications", n.id),
+            {
+              read: true,
+            }
+          )
+        )
+      );
+
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const completeDonation = (id) => {
+  const claimDonation = async (id) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(`http://localhost:5000/api/donations/${id}/claim`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    addNotification(
-      "Donation completed ✅",
-      "complete"
-    );
+      if (!res.ok) {
+        throw new Error("Claim failed");
+      }
 
-    setDonations((prev) =>
-      prev.map((d) =>
-        d._id === id
-          ? { ...d, status: "completed" }
-          : d
-      )
-    );
+      const donation = backendDonations.find(
+        (d) => (d._id || d.id) === id
+      );
+
+      if (donation?.donor?._id) {
+        await addNotification(
+          donation.donor._id,
+          `${currentUser.username} claimed your donation 🤝`,
+          "claim"
+        );
+      }
+
+      await setDoc(doc(db, "realtime", "donations"), {
+        updatedAt: serverTimestamp(),
+      });
+
+      fetchDonations();
+    } catch (err) {
+      console.error("Claim failed:", err);
+    }
+  };
+
+  const completeDonation = async (id, role) => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const res = await fetch(
+        `http://localhost:5000/api/donations/${id}/complete`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Complete failed");
+      }
+
+      const currentOverride = overrides[id] || {
+        ownerConfirmed: false,
+        receiverConfirmed: false,
+        status: "claimed",
+      };
+
+      const updated = {
+        ownerConfirmed: currentOverride.ownerConfirmed || false,
+        receiverConfirmed: currentOverride.receiverConfirmed || false,
+        status: currentOverride.status || "claimed",
+      };
+
+      if (role === "owner") updated.ownerConfirmed = true;
+      if (role === "receiver") updated.receiverConfirmed = true;
+
+      if (updated.ownerConfirmed && updated.receiverConfirmed) {
+        updated.status = "completed";
+      }
+
+      await setDoc(
+        doc(db, "donation_status", id),
+        updated,
+        { merge: true }
+      );
+
+      await setDoc(doc(db, "realtime", "donations"), {
+        updatedAt: serverTimestamp(),
+      });
+
+      fetchDonations();
+
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const deleteDonation = (id) => {
-    setDonations((prev) =>
-      prev.filter((d) =>
-        (d._id || d.id) !== id
-      )
-    );
+    setBackendDonations((prev) => prev.filter((d) => (d._id || d.id) !== id));
   };
 
   return (
     <DonationContext.Provider
       value={{
         donations,
-        setDonations,
         claimDonation,
+        setDonations: setBackendDonations,
         completeDonation,
         deleteDonation,
         notifications,

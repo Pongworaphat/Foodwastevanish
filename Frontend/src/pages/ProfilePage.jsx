@@ -1,18 +1,43 @@
 import React, { useState, useRef, useEffect } from "react";
+import {
+  FaFacebook,
+  FaInstagram,
+} from "react-icons/fa";
 
-const backend =import.meta.env.VITE_BACKEND_URL ||"http://localhost:5000";
+const backend = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 export default function ProfilePage() {
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
   const [profile, setProfile] = useState({
-    name: "", email: "", phone: "", about: "", city: "", country: "", address: "", avatar: "",
+    name: currentUser.username || "",
+    email: currentUser.email || "",
+    phone: currentUser.phone || "",
+    about: currentUser.about || "",
+    avatar: currentUser.avatar || "",
   });
 
-  const [social, setSocial] = useState({ facebook: "", instagram: "", twitter: "", linkedin: "" });
-  const [stats, setStats] = useState({ donations: 0, foodSaved: 0, mealsShared: 0, rating: 0, reviews: 0 });
+
+  const [social, setSocial] = useState({ facebook: "", instagram: "", });
+  const [stats, setStats] = useState({
+    donationsShared: 0,
+    peopleHelped: 0,
+    completedDonations: 0,
+    trustScore: 0,
+    reviews: 0,
+  });
   const [activities, setActivities] = useState([]);
   const [joinedDate, setJoinedDate] = useState("");
 
-  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(() => {
+    if (currentUser.avatar) {
+      return currentUser.avatar.startsWith("/")
+        ? `${backend}${currentUser.avatar}`
+        : currentUser.avatar;
+    }
+    return null;
+  });
+
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -21,39 +46,57 @@ export default function ProfilePage() {
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", type: "alert", onConfirm: null });
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("user");
-      if (!raw) return;
+    const token = localStorage.getItem("authToken");
 
-      const u = JSON.parse(raw);
-      setProfile((p) => ({
-        ...p,
-        name: u.username || "",
-        email: u.email || "",
-        phone: u.phone || "",
-        about: u.about || "",
-        city: u.city || "",
-        country: u.country || "",
-        address: u.address || "",
-        avatar: u.avatar || "",
-      }));
+    if (token) {
+      fetch(`${backend}/api/user/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          const user = data.user;
+          console.log("PROFILE DATA:", data);
+          setStats({
+            donationsShared: data.stats?.donationsShared || 0,
+            completedDonations: data.stats?.completedDonations || 0,
+            peopleHelped: data.stats?.peopleHelped || 0,
+            trustScore: data.stats?.trustScore || 0,
+          });
 
-      if (u.social) setSocial((s) => ({ ...s, ...u.social }));
-      if (u.stats) setStats((prev) => ({ ...prev, ...u.stats }));
-      if (u.activities) setActivities(u.activities);
+          setJoinedDate(
+            new Date(user.createdAt).toLocaleDateString("en-US", {
+              month: "long",
+              year: "numeric",
+            })
+          );
 
-      if (u.createdAt) {
-        const date = new Date(u.createdAt);
-        const formatted = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-        setJoinedDate(formatted);
-      }
+          setProfile((p) => ({
+            ...p,
+            name: user.username || "",
+            email: user.email || "",
+            phone: user.phone || "",
+            about: user.about || "",
+            avatar: user.avatar || "",
+          }));
 
-      if (u.avatar) {
-        const avatarUrl = u.avatar.startsWith("/") ? `${backend}${u.avatar}` : u.avatar;
-        setAvatarPreview(avatarUrl);
-      }
-    } catch (err) {
-      console.error(err);
+          setSocial({
+            facebook: user.social?.facebook || "",
+            instagram: user.social?.instagram || "",
+          });
+
+          if (user.avatar) {
+            const avatarUrl = user.avatar.startsWith("/")
+              ? `${backend}${user.avatar}`
+              : user.avatar;
+
+            setAvatarPreview(avatarUrl);
+          }
+
+          localStorage.setItem("user", JSON.stringify(user));
+        })
+        .catch(console.error);
     }
   }, []);
 
@@ -67,7 +110,11 @@ export default function ProfilePage() {
 
   function handleChange(e) {
     const { name, value } = e.target;
-    setProfile((prev) => ({ ...prev, [name]: value }));
+
+    setProfile((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   }
 
   function handleSocialChange(e) {
@@ -86,7 +133,6 @@ export default function ProfilePage() {
     setSelectedAvatar(file);
     const preview = URL.createObjectURL(file);
     setAvatarPreview(preview);
-
   }
 
   useEffect(() => {
@@ -119,9 +165,11 @@ export default function ProfilePage() {
       const formData = new FormData();
       formData.append("avatar", selectedAvatar);
 
-      const res = await fetch(`${backend}/api/user/profile`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch(`${backend}/api/user/avatar`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
 
@@ -129,8 +177,7 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error(data.message);
 
       if (data.user) {
-        const current =
-          JSON.parse(localStorage.getItem("user"));
+        const current = JSON.parse(localStorage.getItem("user") || "{}");
 
         localStorage.setItem(
           "user",
@@ -178,11 +225,11 @@ export default function ProfilePage() {
         username: profile.name,
         phone: profile.phone,
         about: profile.about,
-        city: profile.city,
-        country: profile.country,
-        address: profile.address,
+
         social,
       };
+      console.log("SAVE PAYLOAD:", payload);
+
       const res = await fetch(`${backend}/api/user/profile`, {
         method: "PUT",
         headers: {
@@ -193,10 +240,9 @@ export default function ProfilePage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) throw new Error(data.message || "อัปโหลดรูปไม่สำเร็จ");
 
-      const current =
-        JSON.parse(localStorage.getItem("user"));
+      const current = JSON.parse(localStorage.getItem("user") || "{}");
 
       localStorage.setItem(
         "user",
@@ -210,9 +256,6 @@ export default function ProfilePage() {
         name: data.user.username || prev.name,
         phone: data.user.phone || prev.phone,
         about: data.user.about || prev.about,
-        city: data.user.city || prev.city,
-        country: data.user.country || prev.country,
-        address: data.user.address || prev.address,
       }));
 
       showAlert("บันทึกสำเร็จ ✨", "อัปเดตข้อมูลโปรไฟล์ของคุณเรียบร้อยแล้ว", "success");
@@ -254,7 +297,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-100 antialiased font-sans">
+    <div className="min-h-screen font-sans antialiased bg-gradient-to-br from-emerald-50 via-white to-emerald-100 antialiased font-sans">
       <div className="max-w-7xl mx-auto p-4 md:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -267,7 +310,10 @@ export default function ProfilePage() {
                 <div className="absolute inset-0 rounded-full bg-emerald-400 blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-300 scale-110" />
                 <div className="relative w-full h-full rounded-full overflow-hidden ring-4 ring-white shadow-xl">
                   {avatarPreview ? (
-                    <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                    <img
+                      src={avatarPreview}
+                      alt="avatar"
+                      className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xl">
                       ผู้ใช้
@@ -316,42 +362,56 @@ export default function ProfilePage() {
 
               <div className="w-full border-t border-gray-100 my-5" />
 
-              {/* Trust & Stats */}
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Community Trust</p>
-              <div className="flex items-center gap-1.5 mt-1.5">
-                <div className="flex text-yellow-400 text-lg">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span key={star} className={star <= Math.round(stats.rating) ? "text-yellow-400" : "text-gray-200"}>★</span>
-                  ))}
-                </div>
-                <span className="text-sm font-semibold text-gray-500">({stats.reviews || 0} รีวิว)</span>
+              <div className="flex items-center justify-center gap-4 py-2">
+                {social.facebook && (
+                  <a
+                    href={social.facebook}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 hover:scale-110 transition"
+                  >
+                    <FaFacebook size={18} />
+                  </a>
+                )}
+
+                {social.instagram && (
+                  <a
+                    href={social.instagram}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-12 h-12 rounded-xl bg-pink-50 flex items-center justify-center text-pink-500 hover:scale-110 transition"
+                  >
+                    <FaInstagram size={18} />
+                  </a>
+                )}
               </div>
 
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-3.5 w-full mt-6">
                 <div className="bg-emerald-50/60 border border-emerald-100/50 rounded-2xl p-3.5 transition-all hover:bg-emerald-50">
-                  <p className="text-2xl font-bold tracking-tight text-emerald-600">{stats.donations || "-"}</p>
-                  <p className="text-xs font-medium text-gray-500 mt-0.5">🍱 Food Shared</p>
+                  <p className="text-2xl font-bold tracking-tight text-emerald-600">{stats.donationsShared || 0}</p>
+                  <p className="text-xs font-medium text-gray-500 mt-0.5">🍱 Donations Shared</p>
                 </div>
                 <div className="bg-blue-50/60 border border-blue-100/50 rounded-2xl p-3.5 transition-all hover:bg-blue-50">
-                  <p className="text-2xl font-bold tracking-tight text-blue-600">{stats.foodSaved > 0 ? `${stats.foodSaved}kg` : "-"}</p>
-                  <p className="text-xs font-medium text-gray-500 mt-0.5">🌍 Waste Reduced</p>
+                  <p className="text-2xl font-bold tracking-tight text-blue-600">{stats.completedDonations || 0}</p>
+                  <p className="text-xs font-medium text-gray-500 mt-0.5">🎉 Completed</p>
                 </div>
                 <div className="bg-yellow-50/60 border border-yellow-100/50 rounded-2xl p-3.5 transition-all hover:bg-yellow-50">
-                  <p className="text-2xl font-bold tracking-tight text-yellow-600">{stats.mealsShared || "-"}</p>
+                  <p className="text-2xl font-bold tracking-tight text-yellow-600">{stats.peopleHelped || 0}</p>
                   <p className="text-xs font-medium text-gray-500 mt-0.5">❤️ People Helped</p>
                 </div>
-                <div className="bg-pink-50/60 border border-pink-100/50 rounded-2xl p-3.5 transition-all hover:bg-pink-50">
-                  <p className="text-2xl font-bold tracking-tight text-pink-600">{stats.rating > 0 ? stats.rating.toFixed(1) : "-"}</p>
+                <div className="bg-amber-50/60 border border-amber-100/50 rounded-2xl p-3.5 transition-all hover:bg-amber-50">
+                  <p className="text-2xl font-bold tracking-tight text-amber-600">{stats.trustScore || 0}</p>
                   <p className="text-xs font-medium text-gray-500 mt-0.5">⭐ Trust Score</p>
                 </div>
               </div>
 
               <div className="w-full mt-5 pt-4 border-t border-gray-100 flex items-center justify-center text-xs font-medium text-gray-400 gap-1">
-                <span>📅 เป็นสมาชิกเมื่อ:</span>
-                <span className="text-gray-600">{joinedDate || "Recently"}</span>
+                <span>📅 Member since:</span>
+                <span className="text-gray-600">
+                  {joinedDate || "Recently"}
+                </span>
               </div>
-
             </div>
           </div>
 
@@ -385,31 +445,7 @@ export default function ProfilePage() {
                   <label className="text-xs font-bold text-gray-500 ml-1">เกี่ยวกับฉัน</label>
                   <textarea name="about" value={profile.about} onChange={handleChange} rows={3} placeholder="เล่าเป้าหมายในการช่วยลด Food Waste ของคุณ..." className="px-4 py-3 rounded-xl bg-gray-50/50 border border-gray-200/80 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all text-sm text-gray-700 resize-none" />
                 </div>
-              </div>
-            </div>
 
-            {/* ADDRESS */}
-            <div className="bg-white/80 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 shadow-xl shadow-emerald-900/5 ring-1 ring-black/5">
-              <h2 className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
-                <span className="w-1.5 h-5 bg-emerald-500 rounded-full inline-block"></span>
-                ข้อมูลที่อยู่ (Address)
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-gray-500 ml-1">เมือง / จังหวัด</label>
-                  <input name="city" value={profile.city} onChange={handleChange} placeholder="เมือง" className="px-4 py-3 rounded-xl bg-gray-50/50 border border-gray-200/80 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all text-sm text-gray-700" />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-gray-500 ml-1">ประเทศ</label>
-                  <input name="country" value={profile.country} onChange={handleChange} placeholder="ประเทศ" className="px-4 py-3 rounded-xl bg-gray-50/50 border border-gray-200/80 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all text-sm text-gray-700" />
-                </div>
-
-                <div className="flex flex-col gap-1.5 md:col-span-2">
-                  <label className="text-xs font-bold text-gray-500 ml-1">รายละเอียดที่อยู่</label>
-                  <textarea name="address" value={profile.address} onChange={handleChange} rows={3} placeholder="บ้านเลขที่, ถนน, อำเภอ/เขต..." className="px-4 py-3 rounded-xl bg-gray-50/50 border border-gray-200/80 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all text-sm text-gray-700 resize-none" />
-                </div>
               </div>
             </div>
 
@@ -419,17 +455,62 @@ export default function ProfilePage() {
                 <span className="w-1.5 h-5 bg-emerald-500 rounded-full inline-block"></span>
                 โซเชียลมีเดีย (Social Media)
               </h2>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-gray-500 ml-1">Facebook URL</label>
-                  <input name="facebook" value={social.facebook} onChange={handleSocialChange} placeholder="https://facebook.com/..." className="px-4 py-3 rounded-xl bg-gray-50/50 border border-gray-200/80 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all text-sm text-gray-700" />
+                  <label className="text-xs font-bold text-gray-500 ml-1 flex items-center gap-2">
+                    <FaFacebook className="text-blue-600" />
+                    Facebook URL
+                  </label>
+
+                  <input
+                    name="facebook"
+                    value={social.facebook}
+                    onChange={handleSocialChange}
+                    placeholder="https://facebook.com/..."
+                    className="px-4 py-3 rounded-xl bg-gray-50/50 border border-gray-200/80 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all text-sm text-gray-700"
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-gray-500 ml-1">Instagram URL</label>
-                  <input name="instagram" value={social.instagram} onChange={handleSocialChange} placeholder="https://instagram.com/..." className="px-4 py-3 rounded-xl bg-gray-50/50 border border-gray-200/80 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all text-sm text-gray-700" />
+                  <label className="text-xs font-bold text-gray-500 ml-1 flex items-center gap-2">
+                    <FaInstagram className="text-pink-500" />
+                    Instagram URL
+                  </label>
+
+                  <input
+                    name="instagram"
+                    value={social.instagram}
+                    onChange={handleSocialChange}
+                    placeholder="https://instagram.com/..."
+                    className="px-4 py-3 rounded-xl bg-gray-50/50 border border-gray-200/80 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all text-sm text-gray-700"
+                  />
                 </div>
+              </div>
+              <div className="mt-5 flex gap-3">
+
+                {social.facebook && (
+                  <a
+                    href={social.facebook}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 hover:scale-110 transition"
+                  >
+                    <FaFacebook size={20} />
+                  </a>
+                )}
+
+                {social.instagram && (
+                  <a
+                    href={social.instagram}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-11 h-11 rounded-xl bg-pink-50 flex items-center justify-center text-pink-500 hover:scale-110 transition"
+                  >
+                    <FaInstagram size={20} />
+                  </a>
+                )}
+
               </div>
             </div>
 

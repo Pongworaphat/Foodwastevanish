@@ -51,8 +51,15 @@ const NotificationBell = ({ isSignedIn }) => {
 
   const formatTimeAgo = (timestamp) => {
 
+    if (!timestamp) return "just now";
+
+    const time =
+      timestamp.seconds
+        ? timestamp.seconds * 1000
+        : timestamp;
+
     const seconds =
-      Math.floor((Date.now() - timestamp) / 1000);
+      Math.floor((Date.now() - time) / 1000);
 
     if (seconds < 60) {
       return "just now";
@@ -74,6 +81,7 @@ const NotificationBell = ({ isSignedIn }) => {
 
     return `${days}d ago`;
   };
+
   return (
     <div className="relative inline-block" ref={dropdownRef}>
       {/* ปุ่มกระดิ่ง */}
@@ -81,10 +89,6 @@ const NotificationBell = ({ isSignedIn }) => {
         onClick={() => {
 
           setOpen(!open);
-
-          if (!open) {
-            markAllNotificationsAsRead();
-          }
 
         }}
         className="relative p-2.5 rounded-full bg-white/70 backdrop-blur-md border border-white/40 shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200"
@@ -97,7 +101,7 @@ const NotificationBell = ({ isSignedIn }) => {
               px-1
               flex items-center justify-center
               rounded-full
-              bg-red-500 text-white animate-pulse
+              bg-red-500 text-white
               text-[10px] font-bold
             ">
             {notifications.filter((n) => !n.read).length}
@@ -106,26 +110,44 @@ const NotificationBell = ({ isSignedIn }) => {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-3 w-80 overflow-hidden rounded-2xl border border-white/30 bg-white/80 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 mt-3 w-80 max-h-[420px] overflow-y-auto rounded-2xl border border-white/30 bg-white/80 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 animate-in fade-in slide-in-from-top-2 duration-200">
 
-          <div className="px-5 py-4 text-sm font-semibold text-gray-800 border-b border-gray-100 bg-white/40 backdrop-blur-md">
-            Notifications
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-white/40 backdrop-blur-md">
+
+            <h3 className="text-sm font-semibold text-gray-800">
+              Notifications
+            </h3>
+
+            {notifications.some((n) => !n.read) && (
+              <button
+                onClick={() => {
+                  markAllNotificationsAsRead();
+                }}
+                className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+              >
+                Mark all read
+              </button>
+            )}
+
           </div>
 
           {signedIn ? (
-            notifications.length > 0 ? (
 
-              notifications.map((notification) => {
+            notifications.filter((n) => !n.read).length > 0 ? (
 
-                const style =
-                  notificationStyles[notification.type] ||
-                  notificationStyles.default;
+              notifications
+                .filter((n) => !n.read)
+                .map((notification) => {
 
-                return (
+                  const style =
+                    notificationStyles[notification.type] ||
+                    notificationStyles.default;
 
-                  <div
-                    key={notification.id}
-                    className={`
+                  return (
+
+                    <div
+                      key={notification.id}
+                      className={`
                         flex items-start gap-3
                         px-5 py-4
                         border-b border-gray-100/70
@@ -138,41 +160,53 @@ const NotificationBell = ({ isSignedIn }) => {
 
                         ${style.bg}
                       `}
-                  >
+                    >
 
-                    <div
-                      className={`
+                      <div
+                        className={`
                         w-10 h-10 rounded-full
                         flex items-center justify-center
                         text-lg shrink-0
                         ${style.iconBg}
                       `}
-                    >
-                      {style.icon}
+                      >
+                        {style.icon}
+                      </div>
+
+                      <div className="flex-1">
+
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {notification.text}
+                        </p>
+
+                        <span className="text-xs text-gray-400 mt-1 block">
+                          {formatTimeAgo(notification.createdAt)}
+                        </span>
+
+                      </div>
+
                     </div>
 
-                    <div className="flex-1">
+                  );
 
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        {notification.text}
-                      </p>
-
-                      <span className="text-xs text-gray-400 mt-1 block">
-                        {formatTimeAgo(notification.createdAt)}
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                );
-
-              })
+                })
 
             ) : (
 
-              <div className="py-10 text-center text-sm text-gray-400">
-                No notifications yet
+              <div className="py-12 flex flex-col items-center justify-center text-gray-400">
+
+                <div className="text-3xl mb-2">
+                  🔔
+                </div>
+
+                <p className="font-medium text-gray-500">
+                  All caught up
+                </p>
+
+                <p className="text-xs text-gray-400 mt-1">
+                  No new notifications
+                </p>
+
               </div>
 
             )

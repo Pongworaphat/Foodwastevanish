@@ -18,6 +18,7 @@ export default function SettingsPage() {
 
   const [passwordStrength, setPasswordStrength] = useState("");
 
+
   useEffect(() => {
     try {
       const prefs = JSON.parse(localStorage.getItem("settings:prefs") || "{}");
@@ -25,7 +26,6 @@ export default function SettingsPage() {
       if (prefs.pushNotifications !== undefined) setPushNotifications(prefs.pushNotifications);
       if (prefs.language) setLanguage(prefs.language);
     } catch (e) {
-      // ignore
     }
   }, []);
 
@@ -133,16 +133,21 @@ export default function SettingsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-emerald-50">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#34d39922,_transparent_35%),linear-gradient(to_bottom,#ecfdf5,#f8fafc,#ecfeff)]">
       <div className="p-6 max-w-4xl mx-auto space-y-6">
         <h1 className="text-2xl font-semibold">การตั้งค่า</h1>
 
-        <div className="bg-white shadow rounded-2xl p-6">
-          <h2 className="text-lg font-medium mb-4">เปลี่ยนรหัสผ่าน</h2>
+        <div className="bg-white/75 backdrop-blur-xl border border-white/60 shadow-[0_10px_40px_rgba(16,185,129,0.10)] rounded-3xl p-7">
+
+          <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+            <span className="w-1.5 h-6 rounded-full bg-emerald-500"></span>
+            เปลี่ยนรหัสผ่าน
+          </h2>
+
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
             {/* รหัสผ่านปัจจุบัน */}
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">รหัสผ่านปัจจุบัน</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">รหัสผ่านปัจจุบัน</label>
 
               <div className="mt-1 relative">
                 <input
@@ -150,7 +155,7 @@ export default function SettingsPage() {
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="กรอกรหัสผ่านปัจจุบัน"
-                  className="w-full px-4 py-3 pr-12 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full px-4 py-3 pr-12 bg-white/70 focus:border-emerald-300 transition-all duration-300 border border-white/60 rounded-2xl shadow-sm  focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
 
                 <div className="absolute inset-y-0 right-3 flex items-center">
@@ -168,7 +173,7 @@ export default function SettingsPage() {
 
             {/* รหัสผ่านใหม่ */}
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">รหัสผ่านใหม่</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">รหัสผ่านใหม่</label>
 
               <div className="mt-1 relative">
                 <input
@@ -179,7 +184,7 @@ export default function SettingsPage() {
                     setPasswordStrength(checkStrength(e.target.value));
                   }}
                   placeholder="กรอกรหัสผ่านใหม่"
-                  className="w-full px-4 py-3 pr-12 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full px-4 py-3 pr-12 bg-white/70 focus:border-emerald-300 transition-all duration-300 border border-white/60 rounded-2xl shadow-sm  focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
 
                 <div className="absolute inset-y-0 right-3 flex items-center">
@@ -233,7 +238,7 @@ export default function SettingsPage() {
 
             {/* ยืนยันรหัสผ่านใหม่ */}
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">ยืนยันรหัสผ่านใหม่</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">ยืนยันรหัสผ่านใหม่</label>
 
               <div className="mt-1 relative">
                 <input
@@ -241,7 +246,7 @@ export default function SettingsPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
-                  className="w-full px-4 py-3 pr-12 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full px-4 py-3 pr-12 bg-white/70 focus:border-emerald-300 transition-all duration-300 border border-white/60 rounded-2xl shadow-sm  focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
 
                 <div className="absolute inset-y-0 right-3 flex items-center">
@@ -260,7 +265,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-start mt-2">
               <button
                 type="submit"
-                className="px-5 py-2 bg-black text-white rounded-lg shadow hover:opacity-95"
+                className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 font-semibold shadow-md hover:scale-[1.02] transition-all text-white rounded-lg shadow hover:opacity-95"
               >
                 บันทึกรหัสผ่านใหม่
               </button>
@@ -272,12 +277,12 @@ export default function SettingsPage() {
         </div>
 
         {/* Notifications card */}
-        <div className="bg-white shadow rounded-2xl p-6">
-          <h2 className="text-lg font-medium mb-4">การแจ้งเตือน</h2>
+        <div className="bg-white/80 backdrop-blur-xl border border-white/60 shadow-[0_10px_40px_rgba(16,185,129,0.10)] rounded-3xl p-7">
+          <h2 className="text-xl font-bold text-slate-800 mb-5 mb-4">การแจ้งเตือน</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium">แจ้งเตือนทางอีเมล</div>
+                <div className="text-sm font-semibold">แจ้งเตือนทางอีเมล</div>
                 <div className="text-xs text-gray-500">รับการแจ้งเตือนผ่านอีเมล</div>
               </div>
               <div>
@@ -297,7 +302,7 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium">แจ้งเตือนแบบพุช</div>
+                <div className="text-sm font-semibold">แจ้งเตือนแบบพุช</div>
                 <div className="text-xs text-gray-500">รับการแจ้งเตือนบนอุปกรณ์</div>
               </div>
               <div>
@@ -316,7 +321,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="pt-2">
-              <button onClick={handlePrefsSave} className="px-4 py-2 bg-black text-white rounded-lg">
+              <button onClick={handlePrefsSave} className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 font-semibold shadow-md hover:scale-[1.02] transition-all text-white rounded-lg">
                 บันทึกการตั้งค่าแจ้งเตือน
               </button>
               {prefsSaved && <div className="mt-2 text-sm text-green-600">{prefsSaved}</div>}
@@ -325,10 +330,10 @@ export default function SettingsPage() {
         </div>
 
         {/* Language card */}
-        <div className="bg-white shadow rounded-2xl p-6">
-          <h2 className="text-lg font-medium mb-4">ภาษา</h2>
+        <div className="bg-white/80 backdrop-blur-xl border border-white/60 shadow-[0_10px_40px_rgba(16,185,129,0.10)] rounded-3xl p-7">
+          <h2 className="text-xl font-bold text-slate-800 mb-5">ภาษา</h2>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">เลือกภาษา</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">เลือกภาษา</label>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
@@ -339,7 +344,7 @@ export default function SettingsPage() {
             </select>
           </div>
         </div>
-     </div>
+      </div>
     </div>
   );
 }

@@ -29,10 +29,17 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/help" element={<HelpPage />} />
         <Route path="/feedback" element={<FeedbackPage />} />
-        <Route path="/edit-donation/:id" element={<EditDonationPage />} />
         
 
         {/* protected routes */}
+        <Route
+          path="/edit-donation/:id"
+          element={
+            <ProtectedRoute>
+              <EditDonationPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/donate"
           element={
