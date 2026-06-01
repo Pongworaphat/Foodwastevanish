@@ -337,9 +337,6 @@ export default function MydonationsPage() {
                         </>
                       )}
                     </div>
-                    {d.status === "completed" && (
-                      <span className="block mt-3 text-green-600 text-sm font-medium"> Completed</span>
-                    )}
                   </div>
                 </div>
               );

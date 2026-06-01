@@ -3,10 +3,13 @@ import "leaflet/dist/leaflet.css";
 import { useDonations } from "../context/DonationContext";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useNavigate } from "react-router-dom";
+
 
 export default function HomeMap() {
 
     const { donations } = useDonations();
+    const navigate = useNavigate();
 
     const redIcon = new L.Icon({
         iconUrl:
@@ -46,22 +49,25 @@ export default function HomeMap() {
                             ]}
                         >
                             <Popup>
-                                <div className="space-y-2">
-                                    <h3 className="font-bold text-lg">
+                                <div className="space-y-1">
+                                    <h3 className="font-bold text-base">
                                         {donation.title}
                                     </h3>
 
-                                    <p>
+                                    <p className="text-sm">
                                         📍 {donation.pickupLocation}
                                     </p>
 
-                                    <p>
-                                        📦  Quantity: {donation.quantity}
+                                    <p className="text-sm">
+                                        🍱 {donation.quantity} portions
                                     </p>
 
-                                    <p>
-                                        🏷️ {donation.category}
-                                    </p>
+                                    <button
+                                        onClick={() => navigate(`/browse?donation=${donation._id}`)}
+                                        className="mt-2 w-full bg-emerald-600 text-white rounded-lg py-2 text-sm"
+                                    >
+                                        View Details
+                                    </button>
                                 </div>
                             </Popup>
                         </Marker>

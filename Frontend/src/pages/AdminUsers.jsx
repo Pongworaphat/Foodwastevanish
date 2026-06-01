@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 export default function AdminUsers() {
 
     const [users, setUsers] = useState([]);
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
 
@@ -78,6 +79,16 @@ export default function AdminUsers() {
         }
     };
 
+    const filteredUsers = users.filter(
+        (user) =>
+            user.username
+                ?.toLowerCase()
+                .includes(search.toLowerCase()) ||
+            user.email
+                ?.toLowerCase()
+                .includes(search.toLowerCase())
+    );
+
     return (
         <div className="p-8">
 
@@ -117,6 +128,18 @@ export default function AdminUsers() {
 
             </div>
 
+            <div className="mb-4">
+                <input
+                    type="text"
+                    placeholder="🔍 Search username or email..."
+                    value={search}
+                    onChange={(e) =>
+                        setSearch(e.target.value)
+                    }
+                    className="w-full max-w-md border rounded-xl px-4 py-3"
+                />
+            </div>
+
             <div className="bg-white shadow rounded-xl overflow-hidden">
 
                 <table className="w-full">
@@ -147,7 +170,7 @@ export default function AdminUsers() {
 
                     <tbody>
 
-                        {users.map((user) => (
+                        {filteredUsers.map((user) => (
 
                             <tr
                                 key={user._id}

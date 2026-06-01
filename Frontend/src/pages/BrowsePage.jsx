@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDonations } from "../context/DonationContext";
 import { useLocation } from "react-router-dom";
 import UserProfileModal from "../components/UserProfileModal";
+import { useSearchParams } from "react-router-dom";
 import {
   MapContainer,
   TileLayer,
@@ -27,9 +28,10 @@ export default function BrowsePage() {
   const [activeCategory, setActiveCategory] = useState("All Donations");
   const [search, setSearch] = useState("");
 
-  const [selectedDonation, setSelectedDonation] = useState(null);
   const [showMap, setShowMap] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedDonation, setSelectedDonation] = useState(null);
+
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
@@ -38,6 +40,22 @@ export default function BrowsePage() {
     claimDonation,
     addNotification
   } = useDonations();
+
+  const [searchParams] = useSearchParams();
+  const selectedDonationId =
+    searchParams.get("donation");
+
+  useEffect(() => {
+    if (!selectedDonationId) return;
+
+    const donation = donations.find(
+      (d) => d._id === selectedDonationId
+    );
+
+    if (donation) {
+      setSelectedDonation(donation);
+    }
+  }, [selectedDonationId, donations]);
 
   const filteredDonations = donations.filter((donation) => {
     const matchCategory =
