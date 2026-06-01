@@ -130,3 +130,34 @@ exports.deleteUser = async (req, res) => {
     });
   }
 };
+
+exports.adminResetPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    const hashed = await bcrypt.hash(
+      password,
+      10
+    );
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      {
+        password: hashed,
+      },
+      {
+        new: true,
+      }
+    );
+
+    res.json({
+      message: "Password reset successfully",
+      user,
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};

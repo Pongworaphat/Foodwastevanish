@@ -9,6 +9,7 @@ const {
   getAllUsers,
   updateUserRole,
   deleteUser,
+  adminResetPassword,
 } = require("../controllers/userController");
 
 const Donation = require("../models/Donation");
@@ -286,6 +287,12 @@ router.delete(
   "/:id",
   auth,
   deleteUser
+);
+
+router.put(
+  "/:id/reset-password",
+  auth,
+  adminResetPassword
 );
 
 module.exports = router;
