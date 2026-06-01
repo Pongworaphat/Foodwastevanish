@@ -1,4 +1,5 @@
 const Feedback = require("../models/Feedback");
+const User = require("../models/User");
 
 exports.createFeedback = async (req, res) => {
   try {
@@ -35,6 +36,7 @@ exports.getAllFeedbacks = async (req, res) => {
 
 exports.resolveFeedback = async (req, res) => {
   try {
+
     const feedback = await Feedback.findByIdAndUpdate(
       req.params.id,
       { status: "resolved" },
@@ -42,6 +44,7 @@ exports.resolveFeedback = async (req, res) => {
     );
 
     res.json(feedback);
+
   } catch (err) {
     res.status(500).json({
       message: err.message,

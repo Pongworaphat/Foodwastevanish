@@ -59,5 +59,13 @@ app.use((req, res) => {
   });
 });
 
-// เปลี่ยนกลับมาใช้ app.listen แบบเดิม
+const notificationRoutes =
+  require("./routes/notification");
+
+app.use(
+  "/api/notifications",
+  notificationRoutes
+);
+
+
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
