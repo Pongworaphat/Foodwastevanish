@@ -4,6 +4,36 @@ import { Link } from "react-router-dom";
 
 export default function AdminFeedbacks() {
     const [feedbacks, setFeedbacks] = useState([]);
+    const [selectedFeedback, setSelectedFeedback] = useState(null);
+    const [newPassword, setNewPassword] = useState("");
+
+    const resetPassword = async (userId) => {
+        try {
+
+            const token =
+                localStorage.getItem("authToken");
+
+            await axios.put(
+                `http://localhost:5000/api/user/${userId}/reset-password`,
+                {
+                    password: newPassword,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            alert("Password Reset Success");
+
+            setNewPassword("");
+
+        } catch (err) {
+            console.error(err);
+            alert("Reset Failed");
+        }
+    };
 
     const token = localStorage.getItem("authToken");
 
@@ -118,7 +148,15 @@ export default function AdminFeedbacks() {
                                     {item.status}
                                 </td>
 
-                                <td className="p-4">
+                                <td className="p-4 flex gap-2">
+
+                                    <button
+                                        onClick={() => setSelectedFeedback(item)}
+                                        className="bg-blue-500 text-white px-4 py-2 rounded"
+                                    >
+                                        View
+                                    </button>
+
                                     {item.status === "pending" && (
                                         <button
                                             onClick={() =>
@@ -129,12 +167,99 @@ export default function AdminFeedbacks() {
                                             Resolve
                                         </button>
                                     )}
+
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+            {selectedFeedback && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-xl">
+
+                        <h2 className="text-2xl font-bold mb-4">
+                            Feedback Detail
+                        </h2>
+
+                        <div className="space-y-3">
+
+                            <p>
+                                <strong>User:</strong>{" "}
+                                {selectedFeedback.user?.username}
+                            </p>
+
+                            <p>
+                                <strong>Category:</strong>{" "}
+                                {selectedFeedback.category}
+                            </p>
+
+                            <p>
+                                <strong>Title:</strong>{" "}
+                                {selectedFeedback.title}
+                            </p>
+
+                            <p>
+                                <strong>Email:</strong>{" "}
+                                {selectedFeedback.contactEmail}
+                            </p>
+
+                            <p>
+                                <strong>Status:</strong>{" "}
+                                {selectedFeedback.status}
+                            </p>
+
+                            <div>
+                                <strong>Message:</strong>
+
+                                <div className="mt-2 p-3 bg-slate-100 rounded-xl">
+                                    {selectedFeedback.message}
+                                </div>
+                            </div>
+
+                            <hr className="my-4" />
+
+                            <h3 className="font-bold mb-2">
+                                Reset Password
+                            </h3>
+
+                            <input
+                                type="text"
+                                value={newPassword}
+                                onChange={(e) =>
+                                    setNewPassword(e.target.value)
+                                }
+                                placeholder="New Password"
+                                className="w-full border rounded-lg px-3 py-2"
+                            />
+
+                            <button
+                                onClick={() => resetPassword(selectedFeedback.user._id)}
+                                className="mt-3 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                            >
+                                Reset Password
+                            </button>
+
+                        </div>
+
+                        <div className="mt-6 flex justify-end">
+
+                            <button
+                                onClick={() =>
+                                    setSelectedFeedback(null)
+                                }
+                                className="bg-slate-800 text-white px-4 py-2 rounded-xl"
+                            >
+                                Close
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            )}
         </div>
     );
 }

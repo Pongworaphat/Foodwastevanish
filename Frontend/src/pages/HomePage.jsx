@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import HomeMap from "./HomeMap";
 
 const slides = [
   {
@@ -170,6 +171,26 @@ export default function Homepage() {
           </div>
         </div>
       </header>
+
+      <section className="bg-white py-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-emerald-900">
+              📍 Active Food Donations
+            </h2>
+
+            <p className="text-slate-500 mt-2">
+              Discover available food donations around your area
+            </p>
+          </div>
+
+          <div className="bg-white rounded-[32px] shadow-2xl border border-slate-100 p-5 overflow-hidden">
+            <HomeMap />
+          </div>
+
+        </div>
+      </section>
 
       {/* Statistics Section */}
       <section className="py-16 bg-white">
