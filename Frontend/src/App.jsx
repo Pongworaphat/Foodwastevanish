@@ -15,12 +15,17 @@ import HelpPage from "./pages/HelpPage";
 import FeedbackPage from "./pages/FeedbackPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EditDonationPage from "./pages/EditDonationPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminDonations from "./pages/AdminDonations";
+import AdminRoute from "./components/Navbar/AdminRoute";
+import AdminFeedbacks from "./pages/AdminFeedbacks";
 
 function App() {
   return (
     <>
       <Navbar />
-      
+
       <Routes>
         {/* public routes */}
         <Route path="/" element={<HomePage />} />
@@ -29,7 +34,7 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/help" element={<HelpPage />} />
         <Route path="/feedback" element={<FeedbackPage />} />
-        
+
 
         {/* protected routes */}
         <Route
@@ -96,6 +101,42 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <AdminUsers />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/donations"
+          element={
+            <AdminRoute>
+              <AdminDonations />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/feedbacks"
+          element={
+            <AdminRoute>
+              <AdminFeedbacks />
+            </AdminRoute>
+          }
+        />
+        
       </Routes>
     </>
   );

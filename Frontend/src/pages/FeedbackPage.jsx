@@ -13,24 +13,48 @@ export default function FeedbackPage() {
   const [email, setEmail] = useState("");
   const [success, setSuccess] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!type || !title || !details) {
-      setSuccess("กรุณากรอกข้อมูลให้ครบทุกช่อง");
-      return;
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const res = await fetch(
+        "http://localhost:5000/api/feedback",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            category: type,
+            title,
+            message: details,
+            contactEmail: email,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          data.message || "Submit failed"
+        );
+      }
+
+      alert("ส่งความคิดเห็นสำเร็จ 🎉");
+
+      setType("");
+      setTitle("");
+      setDetails("");
+      setEmail("");
+
+    } catch (err) {
+      console.error(err);
+      alert("เกิดข้อผิดพลาด");
     }
-
-    console.log({ type, title, details, email });
-
-    setSuccess(
-      "ส่งความคิดเห็นเรียบร้อยแล้ว ✨ ขอบคุณสำหรับคำแนะนำของคุณ!"
-    );
-
-    setType("");
-    setTitle("");
-    setDetails("");
-    setEmail("");
   };
 
   const handleReset = () => {

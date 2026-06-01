@@ -17,7 +17,12 @@ module.exports = function (req, res, next) {
 
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    req.user = { id: decoded.id };
+    console.log("DECODED TOKEN:", decoded);
+
+    req.user = {
+      id: decoded.id,
+      role: decoded.role
+    };
 
     next();
   } catch (err) {

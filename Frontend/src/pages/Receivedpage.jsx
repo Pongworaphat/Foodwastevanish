@@ -237,7 +237,7 @@ export default function ReceivedPage() {
                       <div>🗓️ Exp: {formatDateTH(item.expDate)}</div>
                     </div>
                   </div>
-                  
+
                   {/* BUTTONS */}
                   <div className="mt-4 flex gap-3">
                     <button
@@ -262,7 +262,7 @@ export default function ReceivedPage() {
 
                   {/* COMPLETED TEXT */}
                   {item.status === "completed" && (
-                    <span className="block mt-3 text-green-600 text-sm font-medium">✅ Completed</span>
+                    <span className="block mt-3 text-green-600 text-sm font-medium"> Completed</span>
                   )}
                 </div>
 

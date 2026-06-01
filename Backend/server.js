@@ -7,6 +7,7 @@ const path = require("path");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const donationRoutes = require("./routes/donation");
+const feedbackRoutes = require("./routes/feedback");
 
 
 const helmet = require("helmet");
@@ -39,6 +40,7 @@ mongoose
   });
 
 app.use("/api/user", userRoutes);
+app.use("/api/feedback", feedbackRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/donations", donationRoutes);
 

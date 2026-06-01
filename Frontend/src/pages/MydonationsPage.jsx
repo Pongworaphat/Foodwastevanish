@@ -53,9 +53,21 @@ export default function MydonationsPage() {
   };
 
   const counts = {
-    available: myDonations.filter((d) => d.status === "available").length,
-    claimed: myDonations.filter((d) => d.status === "claimed").length,
-    completed: myDonations.filter((d) => d.status === "completed").length,
+    available: myDonations.filter(
+      (d) => d.status === "available"
+    ).length,
+
+    claimed: myDonations.filter(
+      (d) => d.status === "claimed"
+    ).length,
+
+    completed: myDonations.filter(
+      (d) => d.status === "completed"
+    ).length,
+
+    expired: myDonations.filter(
+      (d) => d.status === "expired"
+    ).length,
   };
 
   const filtered = myDonations.filter((d) => d.status === tab);
@@ -152,14 +164,20 @@ export default function MydonationsPage() {
 
         {/* ================= TABS ================= */}
         <div className="mb-6 flex gap-3 overflow-x-auto rounded-full bg-gray-200 p-1">
-          {["available", "claimed", "completed"].map((t) => (
+          {["available", "claimed", "completed", "expired"].map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 min-w-[160px] text-center text-sm font-medium py-2 rounded-full transition
               ${tab === t ? "bg-white shadow-sm text-gray-900" : "text-gray-600"}`}
             >
-              {t === "available" ? "Active" : t === "claimed" ? "In Progress" : "Completed"} ({counts[t]})
+              {t === "available"
+                ? "Active"
+                : t === "claimed"
+                  ? "In Progress"
+                  : t === "completed"
+                    ? "Completed"
+                    : "Expired"} ({counts[t]})
             </button>
           ))}
         </div>
@@ -193,22 +211,38 @@ export default function MydonationsPage() {
                       className="h-full w-full object-cover"
                       onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
                     />
-                    <div className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-medium ${d.status === "available" ? "bg-emerald-100 text-emerald-800" : d.status === "claimed" ? "bg-yellow-100 text-yellow-800" : "bg-gray-200 text-gray-700"}`}>
-                      {d.status === "available" ? "Active" : d.status === "claimed" ? "In Progress" : "Completed"}
+                    <div
+                      className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-medium
+                        ${d.status === "available"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : d.status === "claimed"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : d.status === "completed"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-red-100 text-red-800"
+                        }`}
+                    >
+                      {d.status === "available"
+                        ? "Active"
+                        : d.status === "claimed"
+                          ? "In Progress"
+                          : d.status === "completed"
+                            ? "Completed"
+                            : "Expired"}
                     </div>
                   </div>
 
                   {/* === CONTENT === */}
+                  <div
+                    className={`relative overflow-hidden p-5 ${getCategoryCardStyle(
+                      d.category
+                    )}`}>
                     <div
-                      className={`relative overflow-hidden p-5 ${getCategoryCardStyle(
+                      className={`absolute -top-20 -right-20 w-44 h-44 rounded-full ${getCategoryCircleStyle(
                         d.category
-                      )}`}>
-                      <div
-                        className={`absolute -top-20 -right-20 w-44 h-44 rounded-full ${getCategoryCircleStyle(
-                          d.category
-                        )}`}
-                      />
-                      <div className="relative z-10">
+                      )}`}
+                    />
+                    <div className="relative z-10">
                       <h3 className="text-lg font-semibold text-gray-900">{d.title || "Untitled"}</h3>
                       <div className="mt-3 flex items-center gap-3 text-sm text-gray-700">
                         <img
@@ -229,7 +263,7 @@ export default function MydonationsPage() {
                         {d.verified && (
                           <div className="ml-2 rounded-md border px-2 py-1 text-xs font-medium text-gray-600">Verified</div>
                         )}
-                        </div>
+                      </div>
                     </div>
 
                     <div className="mt-3 text-sm text-gray-600 space-y-1">
@@ -304,7 +338,7 @@ export default function MydonationsPage() {
                       )}
                     </div>
                     {d.status === "completed" && (
-                      <span className="block mt-3 text-green-600 text-sm font-medium">✅ Completed</span>
+                      <span className="block mt-3 text-green-600 text-sm font-medium"> Completed</span>
                     )}
                   </div>
                 </div>

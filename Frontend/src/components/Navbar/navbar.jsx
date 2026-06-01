@@ -11,6 +11,10 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const user = JSON.parse(
+    localStorage.getItem("user") || "null"
+  );
+
   const checkSignedIn = () => {
     const token = localStorage.getItem("authToken");
     const user = localStorage.getItem("user");
@@ -56,6 +60,11 @@ export default function Navbar() {
           { to: "/browse", label: "Browse Donations" },
           { to: "/mydonations", label: "My Donations" },
           { to: "/received", label: "Received" },
+
+          ...(user?.role === "admin"
+            ? [{ to: "/admin", label: "Admin" }]
+            : []),
+
         ].map((item) => (
           <Link
             key={item.to}

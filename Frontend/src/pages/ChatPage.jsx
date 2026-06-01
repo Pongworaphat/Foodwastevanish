@@ -5,7 +5,18 @@ import ChatBubble from "../components/chat/ChatBubble";
 import ChatInput from "../components/chat/ChatInput";
 import { useDonations } from "../context/DonationContext";
 import toast from "react-hot-toast";
-import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { 
+    collection, 
+    addDoc, 
+    query, 
+    where, 
+    orderBy, 
+    onSnapshot, 
+    serverTimestamp, 
+    doc, 
+    updateDoc, 
+    deleteDoc 
+} from "firebase/firestore";
 import { db } from "../firebase";
 
 import "leaflet/dist/leaflet.css";
@@ -33,7 +44,6 @@ export default function ChatPage() {
     const donationId = initialDonation?._id || initialDonation?.id;
 
     const donation = donations?.find(d => (d._id === donationId || d.id === donationId)) || initialDonation;
-
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
     const isOwner = (donation?.donor?._id || donation?.donor) === currentUser._id;
@@ -111,16 +121,11 @@ export default function ChatPage() {
             setMessages(loadedMessages);
 
             const unseenMessages = loadedMessages.filter(
-                (msg) =>
-                    msg.senderId !== currentUser._id &&
-                    msg.status !== "Seen"
+                (msg) => msg.senderId !== currentUser._id && msg.status !== "Seen"
             );
 
             unseenMessages.forEach(async (msg) => {
-                await updateDoc(
-                    doc(db, "chats", msg.id),
-                    { status: "Seen" }
-                );
+                await updateDoc(doc(db, "chats", msg.id), { status: "Seen" });
             });
         });
 
@@ -177,7 +182,10 @@ export default function ChatPage() {
             setSelectedImages([]);
             imagePreviews.forEach((url) => URL.revokeObjectURL(url));
             setImagePreviews([]);
-            const replyDataForFirebase = replyingTo ? { id: replyingTo.id, text: replyingTo.text || "", senderId: replyingTo.senderId } : null;
+            
+            const replyDataForFirebase = replyingTo 
+                ? { id: replyingTo.id, text: replyingTo.text || "", senderId: replyingTo.senderId } 
+                : null;
             setReplyingTo(null);
 
             if (fileInputRef.current) fileInputRef.current.value = "";
@@ -220,7 +228,11 @@ export default function ChatPage() {
     };
 
     const unsendMessage = async (id) => {
-        try { await deleteDoc(doc(db, "chats", id)); } catch (error) { console.error(error); }
+        try { 
+            await deleteDoc(doc(db, "chats", id)); 
+        } catch (error) { 
+            console.error(error); 
+        }
     };
 
     const handleInput = (e) => {
@@ -256,12 +268,14 @@ export default function ChatPage() {
         <div className="h-[calc(100vh-90px)] w-full overflow-hidden bg-slate-50/50 font-sans antialiased">
             <div className="w-full h-full flex flex-col overflow-hidden">
 
-                {/* ─── PREMIUM HEADER ─── */}
-                <div className="border-b border-slate-200/50 bg-white/95 backdrop-blur-lg px-8 py-4 flex items-center justify-between shrink-0 shadow-[0_1px_4px_rgba(0,0,0,0.03)] z-10">
-                    <div className="flex items-center gap-5 min-w-0">
+                {/* ─── PREMIUM HEADER (FIXED RATIO) ─── */}
+                <div className="border-b border-slate-200/50 bg-white/95 backdrop-blur-lg px-6 py-3.5 flex items-center justify-between shrink-0 shadow-[0_1px_4px_rgba(0,0,0,0.03)] z-10 gap-4">
+                    
+                    {/* USER INFO & TAGS LEFT PANEL */}
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
                         <button
                             onClick={() => navigate(-1)}
-                            className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-100/70 active:scale-95 transition-all text-slate-600 shadow-sm"
+                            className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-100/70 active:scale-95 transition-all text-slate-600 shadow-sm shrink-0"
                         >
                             <ArrowLeft size={18} />
                         </button>
@@ -269,29 +283,86 @@ export default function ChatPage() {
                             <img
                                 src={chatUser?.avatar?.startsWith("/") ? `http://localhost:5000${chatUser.avatar}` : chatUser?.avatar || "https://ui-avatars.com/api/?name=User"}
                                 alt="avatar"
-                                className="w-12 h-12 rounded-full object-cover ring-4 ring-emerald-500/10 shadow-sm"
+                                className="w-11 h-11 rounded-full object-cover ring-4 ring-emerald-500/10 shadow-sm"
                             />
-                            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-sm"></span>
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-sm"></span>
                         </div>
 
-                        <div className="min-w-0">
-                            <div>
-                                <h2 className="font-extrabold text-[18px] text-slate-900 tracking-tight">
-                                    {chatUser?.username}
-                                </h2>
-                            </div>
-                            <div className="flex items-center flex-wrap gap-2.5 mt-1.5">
-                                <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-100/70 px-2.5 py-1 rounded-full max-w-[200px] truncate border border-slate-200/50">
-                                    <MapPin size={13} className="text-slate-400 shrink-0" /> {donation.pickupLocation || "No location"}
+                        <div className="min-w-0 flex-1">
+                            <h2 className="font-extrabold text-[16px] text-slate-900 tracking-tight truncate">
+                                {chatUser?.username}
+                            </h2>
+                            <div className="flex items-center flex-wrap gap-2 mt-1">
+                                <span className="flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100/70 px-2.5 py-0.5 rounded-full max-w-[180px] truncate border border-slate-200/50">
+                                    <MapPin size={12} className="text-slate-400 shrink-0" /> {donation.pickupLocation || "No location"}
                                 </span>
-                                <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-100/70 px-2.5 py-1 rounded-full border border-slate-200/50">
-                                    <Package size={13} className="text-slate-400 shrink-0" /> {donation.quantity || "0"}
+                                <span className="flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100/70 px-2.5 py-0.5 rounded-full border border-slate-200/50 shrink-0">
+                                    <Package size={12} className="text-slate-400 shrink-0" /> {donation.quantity || "0"}
                                 </span>
-                                <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full tracking-wide border ${donation.status === "completed" ? "bg-emerald-50 text-emerald-700 border-emerald-200/70" : "bg-blue-50 text-blue-700 border-blue-200/70"
-                                    }`}>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide border shrink-0 ${
+                                    donation.status === "completed" 
+                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200/70" 
+                                        : "bg-blue-50 text-blue-700 border-blue-200/70"
+                                }`}>
                                     {donation.status === "completed" ? "Completed" : "Pending Pickup"}
                                 </span>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* RE-PROPORTIONED STATUS PANEL */}
+                    <div className="flex items-center shrink-0 ml-4">
+                        <div className="bg-white border border-slate-200/80 rounded-xl px-4 py-2 flex items-center justify-between gap-6 shadow-[0_2px_8px_rgba(0,0,0,0.02)] max-w-md">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border shrink-0 ${
+                                    donation.status === "completed"
+                                        ? "bg-emerald-50 text-emerald-500 border-emerald-100"
+                                        : "bg-blue-50 text-blue-500 border-blue-100"
+                                }`}>
+                                    <CheckCircle2 size={16} />
+                                </div>
+                                <div className="hidden sm:block min-w-0">
+                                    <p className="text-xs font-bold text-slate-800 truncate">Donation Status Process</p>
+                                    <p className="text-[10px] text-slate-400 truncate">Please verify once handover is fully completed.</p>
+                                </div>
+                            </div>
+
+                            <button
+                                disabled={
+                                    donation.status === "completed" ||
+                                    (isOwner && donation.ownerConfirmed) ||
+                                    (isReceiver && donation.receiverConfirmed) ||
+                                    isSending
+                                }
+                                onClick={() => {
+                                    if (isOwner) completeDonation(donation._id || donation.id, "owner");
+                                    if (isReceiver) completeDonation(donation._id || donation.id, "receiver");
+
+                                    toast.success("Donation updated ✅");
+
+                                    setTimeout(() => {
+                                        if (isOwner) navigate("/mydonations");
+                                        else navigate("/received");
+                                    }, 800);
+                                }}
+                                className={`px-4 py-2 rounded-lg font-bold text-[11px] transition-all whitespace-nowrap shadow-sm shrink-0 ${
+                                    donation.status === "completed"
+                                        ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                                        : donation.ownerConfirmed || donation.receiverConfirmed
+                                            ? "bg-yellow-100 text-yellow-700 border border-yellow-200"
+                                            : "bg-slate-900 hover:bg-slate-800 text-white"
+                                    }`}
+                            >
+                                {donation.status === "completed"
+                                    ? "Completed ✅"
+                                    : isOwner && donation.ownerConfirmed
+                                        ? "Waiting Receiver"
+                                        : isReceiver && donation.receiverConfirmed
+                                            ? "Waiting Owner"
+                                            : isOwner
+                                                ? "Mark Completed"
+                                                : "Confirm Received"}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -301,7 +372,7 @@ export default function ChatPage() {
 
                     {/* SIDEBAR (ซ้าย 25%) */}
                     <div className="flex-[0_0_25%] border-r border-slate-200/50 bg-white p-6 flex flex-col shrink-0 overflow-y-auto hidden lg:flex shadow-[2px_0_12px_rgba(0,0,0,0.015)]">
-                        <div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-100">
+                        <div className="flex items-center mb-5 pb-3 border-b border-slate-100">
                             <h3 className="font-extrabold text-[12px] uppercase tracking-wider text-slate-400">
                                 Pickup Information
                             </h3>
@@ -309,44 +380,29 @@ export default function ChatPage() {
 
                         <div className="space-y-4">
                             <div className={`relative overflow-hidden border rounded-xl p-4 ${categoryStyle}`}>
-
-                                <div
-                                    className={`absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-70 ${donation?.category === "Food Sharing"
+                                <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-70 ${
+                                    donation?.category === "Food Sharing"
                                         ? "bg-emerald-100"
                                         : donation?.category === "Animal Food"
                                             ? "bg-orange-100"
                                             : "bg-lime-100"
-                                        }`}
-                                />
-
+                                }`} />
                                 <div className="relative z-10">
-                                    <h2 className="font-bold text-lg text-slate-800">
-                                        {donation?.title}
-                                    </h2>
-
-                                    <p className="text-sm text-slate-500 mt-1">
-                                        {donation?.description}
-                                    </p>
+                                    <h2 className="font-bold text-lg text-slate-800">{donation?.title}</h2>
+                                    <p className="text-sm text-slate-500 mt-1">{donation?.description}</p>
                                 </div>
-
                             </div>
 
                             <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-4">
-                                    Pickup Info
-                                </p>
+                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-4">Pickup Info</p>
                                 <div className="space-y-3.5 text-sm">
                                     <div className="flex justify-between items-center text-slate-600">
                                         <span className="font-medium">📦 Quantity</span>
-                                        <span className="font-bold text-slate-800 text-base">
-                                            {donation?.quantity}
-                                        </span>
+                                        <span className="font-bold text-slate-800 text-base">{donation?.quantity}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-slate-600">
                                         <span className="font-medium">🗓️ Exp</span>
-                                        <span className="font-bold text-slate-800">
-                                            {formatDate(donation?.expDate)}
-                                        </span>
+                                        <span className="font-bold text-slate-800">{formatDate(donation?.expDate)}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-slate-600">
                                         <span className="font-medium">⏰ Pickup</span>
@@ -358,22 +414,13 @@ export default function ChatPage() {
                             </div>
 
                             <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
-                                    Pickup Location
-                                </p>
-                                <p className="font-semibold text-sm text-slate-700 mt-3 leading-relaxed">
-                                    📍 {donation?.pickupLocation}
-                                </p>
+                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Pickup Location</p>
+                                <p className="font-semibold text-sm text-slate-700 mt-3 leading-relaxed">📍 {donation?.pickupLocation}</p>
                             </div>
 
                             <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-4">
-                                    Pickup Map
-                                </p>
-                                <div
-                                    className="h-[250px] rounded-xl overflow-hidden"
-                                    onWheel={(e) => e.stopPropagation()}
-                                >
+                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-4">Pickup Map</p>
+                                <div className="h-[250px] rounded-xl overflow-hidden" onWheel={(e) => e.stopPropagation()}>
                                     {donation?.latitude && donation?.longitude ? (
                                         <MapContainer
                                             center={[donation.latitude, donation.longitude]}
@@ -444,65 +491,20 @@ export default function ChatPage() {
                         {/* BOTTOM ACTIONS ZONE */}
                         <div className="shrink-0 bg-white border-t border-slate-200/60 shadow-[0_-4px_16px_rgba(0,0,0,0.015)] z-10 w-full">
 
-                            {/* STATUS PANEL */}
-                            <div className="px-8 py-4 bg-slate-50/50 border-b border-slate-100">
-                                <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-                                    <div className="flex items-center gap-3.5">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${donation.status === "completed" ? "bg-emerald-50 text-emerald-500 border-emerald-100" : "bg-blue-50 text-blue-500 border-blue-100"}`}>
-                                            <CheckCircle2 size={19} />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-extrabold text-slate-800">Donation Status Process</p>
-                                            <p className="text-[11px] text-slate-400 font-semibold">Please verify once handover is fully completed.</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        disabled={donation.status === "completed" || (isOwner && donation.ownerConfirmed) || (isReceiver && donation.receiverConfirmed) || isSending}
-                                        onClick={() => {
-                                            if (isOwner) completeDonation(donation._id || donation.id, "owner");
-                                            if (isReceiver) completeDonation(donation._id || donation.id, "receiver");
-                                            toast.success("Donation updated ✅");
-                                            setTimeout(() => {
-                                                if (isOwner) navigate("/mydonations");
-                                                else navigate("/received");
-                                            }, 800);
-                                        }}
-                                        className={`px-5 py-2.5 rounded-lg font-extrabold text-xs tracking-wide transition-all shadow-sm active:scale-[0.98] ${donation.status === "completed"
-                                            ? "bg-emerald-50 text-emerald-600 border border-emerald-200/70"
-                                            : donation.ownerConfirmed || donation.receiverConfirmed
-                                                ? "bg-yellow-100 text-yellow-700 border border-yellow-200 animate-pulse"
-                                                : "bg-slate-900 hover:bg-slate-800 text-white shadow-sm"
-                                            }`}
-                                    >
-                                        {donation.status === "completed"
-                                            ? "Completed ✅"
-                                            : isOwner && donation.ownerConfirmed
-                                                ? "Waiting Receiver"
-                                                : isReceiver && donation.receiverConfirmed
-                                                    ? "Waiting Owner"
-                                                    : isOwner
-                                                        ? "Mark Completed"
-                                                        : "Confirm Received"}
-                                    </button>
-                                </div>
-                            </div>
-
                             {/* REPLY / EDIT INDICATOR BANNER */}
-                            {
-                                (editingMessage || replyingTo) && (
-                                    <div className="mx-8 my-2 px-4 py-3 rounded-lg border border-slate-200/80 bg-slate-50 flex items-center justify-between shadow-inner">
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-                                                {editingMessage ? "Editing active message" : "Replying to message"}
-                                            </span>
-                                            <span className="text-xs text-slate-600 truncate max-w-[500px] font-semibold mt-0.5">
-                                                {editingMessage ? editingMessage.text : (replyingTo.text || "📷 Photo")}
-                                            </span>
-                                        </div>
-                                        <button onClick={handleCancelAll} className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-200/80 hover:bg-slate-200 text-slate-500 text-[11px] transition">✕</button>
+                            {(editingMessage || replyingTo) && (
+                                <div className="mx-8 my-2 px-4 py-3 rounded-lg border border-slate-200/80 bg-slate-50 flex items-center justify-between shadow-inner">
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+                                            {editingMessage ? "Editing active message" : "Replying to message"}
+                                        </span>
+                                        <span className="text-xs text-slate-600 truncate max-w-[500px] font-semibold mt-0.5">
+                                            {editingMessage ? editingMessage.text : (replyingTo.text || "📷 Photo")}
+                                        </span>
                                     </div>
-                                )
-                            }
+                                    <button onClick={handleCancelAll} className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-200/80 hover:bg-slate-200 text-slate-500 text-[11px] transition">✕</button>
+                                </div>
+                            )}
 
                             {/* CHAT INPUT CONTAINER */}
                             <div className="px-6 py-4 bg-white">
@@ -526,21 +528,19 @@ export default function ChatPage() {
                 </div>
 
                 {/* IMAGE PREVIEW MODAL */}
-                {
-                    previewImage && (
-                        <div
-                            className="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all"
-                            onClick={() => setPreviewImage(null)}
-                        >
-                            <img
-                                src={previewImage}
-                                onClick={(e) => e.stopPropagation()}
-                                alt="preview"
-                                className="max-w-[90%] max-h-[90%] rounded-xl shadow-2xl border-4 border-white"
-                            />
-                        </div>
-                    )
-                }
+                {previewImage && (
+                    <div
+                        className="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all"
+                        onClick={() => setPreviewImage(null)}
+                    >
+                        <img
+                            src={previewImage}
+                            onClick={(e) => e.stopPropagation()}
+                            alt="preview"
+                            className="max-w-[90%] max-h-[90%] rounded-xl shadow-2xl border-4 border-white"
+                        />
+                    </div>
+                )}
 
             </div>
         </div>

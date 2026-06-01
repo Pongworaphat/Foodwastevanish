@@ -207,6 +207,33 @@ export const DonationProvider = ({ children }) => {
         updated.status = "completed";
       }
 
+      if (
+        updated.ownerConfirmed &&
+        updated.receiverConfirmed
+      ) {
+        updated.status = "completed";
+
+        const donation = backendDonations.find(
+          (d) => (d._id || d.id) === id
+        );
+
+        if (donation?.donor?._id) {
+          await addNotification(
+            donation.donor._id,
+            `Donation "${donation.title}" completed successfully 🎉`,
+            "completed"
+          );
+        }
+
+        if (donation?.receiver?._id) {
+          await addNotification(
+            donation.receiver._id,
+            `You received "${donation.title}" successfully 🎉`,
+            "completed"
+          );
+        }
+      }
+
       await setDoc(
         doc(db, "donation_status", id),
         updated,

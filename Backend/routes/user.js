@@ -4,13 +4,20 @@ const User = require('../models/User');
 const verifyToken = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const auth = require("../middleware/auth");
-const { changePassword } = require("../controllers/userController");
+const {
+  changePassword,
+  getAllUsers,
+  updateUserRole,
+  deleteUser,
+} = require("../controllers/userController");
+
 const Donation = require("../models/Donation");
 
 
 const router = express.Router();
 
 router.put("/change-password", auth, changePassword);
+router.get("/", getAllUsers);
 
 router.get('/profile', verifyToken, async (req, res) => {
   try {
@@ -46,7 +53,12 @@ router.get('/profile', verifyToken, async (req, res) => {
 
     const peopleHelped = completedDonations;
 
-    const trustScore = 0;
+    const trustScore =
+      donationsShared > 0
+        ? Math.round(
+          (completedDonations / donationsShared) * 100
+        )
+        : 0;
 
     res.json({
       user,
@@ -63,6 +75,34 @@ router.get('/profile', verifyToken, async (req, res) => {
 
     res.status(500).json({
       message: 'Server error'
+    });
+  }
+});
+
+router.get("/activity", verifyToken, async (req, res) => {
+  try {
+    const userId = req.user?.id || req.userId;
+
+    const donations = await Donation.find({
+      donor: userId,
+    })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    const activities = donations.map((donation) => ({
+      id: donation._id,
+      title: donation.title,
+      status: donation.status,
+      createdAt: donation.createdAt,
+    }));
+
+    res.json(activities);
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message: "Server error",
     });
   }
 });
@@ -93,7 +133,12 @@ router.get("/:id/public", async (req, res) => {
 
     const peopleHelped = completedDonations;
 
-    const trustScore = 0;
+    const trustScore =
+      donationsShared > 0
+        ? Math.round(
+          (completedDonations / donationsShared) * 100
+        )
+        : 0;
 
     res.json({
       ...user.toObject(),
@@ -231,5 +276,16 @@ router.delete('/', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+router.put(
+  "/:id/role",
+  updateUserRole
+);
+
+router.delete(
+  "/:id",
+  auth,
+  deleteUser
+);
 
 module.exports = router;

@@ -18,6 +18,25 @@ exports.createDonation = async (req, res) => {
 
 exports.getDonations = async (req, res) => {
   try {
+    const today = new Date();
+
+    const expiredDonations = await Donation.find({
+      status: "available",
+      expDate: { $ne: "" }
+    });
+
+    for (const donation of expiredDonations) {
+
+      const exp = new Date(donation.expDate);
+
+      if (exp < today) {
+
+        donation.status = "expired";
+
+        await donation.save();
+      }
+    }
+
     const donations = await Donation.find()
       .populate("donor", "username avatar rating")
       .populate("receiver", "username avatar rating")
@@ -41,6 +60,12 @@ exports.claimDonation = async (req, res) => {
 
     if (donation.donor.toString() === req.user.id) {
       return res.status(400).json({ message: "You cannot claim your own donation" });
+    }
+
+    if (donation.status === "expired") {
+      return res.status(400).json({
+        message: "Donation expired"
+      });
     }
 
     if (donation.status !== "available") {
@@ -69,6 +94,9 @@ exports.completeDonation = async (req, res) => {
     if (!donation) {
       return res.status(404).json({ message: "Donation not found" });
     }
+
+    console.log("req.user =", req.user);
+    console.log("donor =", donation.donor.toString());
 
     if (
       donation.donor.toString() !== req.user.id &&
@@ -114,20 +142,32 @@ exports.deleteDonation = async (req, res) => {
     const donation = await Donation.findById(req.params.id);
 
     if (!donation) {
-      return res.status(404).json({ message: "Donation not found" });
+      return res.status(404).json({
+        message: "Donation not found",
+      });
     }
 
-    if (donation.donor.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Unauthorized" });
+    if (
+      donation.donor.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        message: "Unauthorized",
+      });
     }
 
     await donation.deleteOne();
 
-    res.json({ message: "Donation deleted" });
+    res.json({
+      message: "Donation deleted",
+    });
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Delete failed" });
+
+    res.status(500).json({
+      message: "Delete failed",
+    });
   }
 };
 
@@ -140,7 +180,6 @@ exports.updateDonation = async (req, res) => {
     }
 
     if (donation.donor.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Unauthorized" });
     }
 
     const updatedData = { ...req.body };

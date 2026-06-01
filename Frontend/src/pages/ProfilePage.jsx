@@ -26,7 +26,9 @@ export default function ProfilePage() {
     trustScore: 0,
     reviews: 0,
   });
+
   const [activities, setActivities] = useState([]);
+
   const [joinedDate, setJoinedDate] = useState("");
 
   const [avatarPreview, setAvatarPreview] = useState(() => {
@@ -41,6 +43,13 @@ export default function ProfilePage() {
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+  });
+
+  const [changingPassword, setChangingPassword] = useState(false);
   const fileRef = useRef(null);
 
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", type: "alert", onConfirm: null });
@@ -95,6 +104,17 @@ export default function ProfilePage() {
           }
 
           localStorage.setItem("user", JSON.stringify(user));
+
+          fetch(`${backend}/api/user/activity`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              setActivities(data);
+            })
+            .catch(console.error);
         })
         .catch(console.error);
     }
@@ -296,6 +316,30 @@ export default function ProfilePage() {
     }
   }
 
+  const trustScore = stats.trustScore || 0;
+
+  const trustColor =
+    trustScore >= 70
+      ? {
+        bg: "bg-green-50",
+        border: "border-green-200",
+        text: "text-green-600",
+        label: "🥇 High Trust",
+      }
+      : trustScore >= 40
+        ? {
+          bg: "bg-yellow-50",
+          border: "border-yellow-200",
+          text: "text-yellow-600",
+          label: "🥈 Reliable Donor",
+        }
+        : {
+          bg: "bg-red-50",
+          border: "border-red-200",
+          text: "text-red-600",
+          label: "🥉 New Donor",
+        };
+
   return (
     <div className="min-h-screen font-sans antialiased bg-gradient-to-br from-emerald-50 via-white to-emerald-100 antialiased font-sans">
       <div className="max-w-7xl mx-auto p-4 md:p-8">
@@ -400,9 +444,22 @@ export default function ProfilePage() {
                   <p className="text-2xl font-bold tracking-tight text-yellow-600">{stats.peopleHelped || 0}</p>
                   <p className="text-xs font-medium text-gray-500 mt-0.5">❤️ People Helped</p>
                 </div>
-                <div className="bg-amber-50/60 border border-amber-100/50 rounded-2xl p-3.5 transition-all hover:bg-amber-50">
-                  <p className="text-2xl font-bold tracking-tight text-amber-600">{stats.trustScore || 0}</p>
-                  <p className="text-xs font-medium text-gray-500 mt-0.5">⭐ Trust Score</p>
+                <div
+                  className={`${trustColor.bg} border ${trustColor.border} rounded-2xl p-3.5 transition-all`}
+                >
+                  <p
+                    className={`text-2xl font-bold tracking-tight ${trustColor.text}`}
+                  >
+                    {trustScore}%
+                  </p>
+
+                  <p className="text-xs font-medium text-gray-500 mt-0.5">
+                    ⭐ Trust Score
+                  </p>
+
+                  <p className={`text-[11px] font-semibold mt-1 ${trustColor.text}`}>
+                    {trustColor.label}
+                  </p>
                 </div>
               </div>
 
@@ -526,26 +583,40 @@ export default function ProfilePage() {
                 </span>
               </div>
 
-              {activities.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="text-4xl mb-3">📭</div>
-                  <h3 className="text-sm font-semibold text-gray-700">ไม่มีประวัติกิจกรรมในขณะนี้</h3>
-                  <p className="text-xs text-gray-400 mt-1 max-w-xs">ประวัติการแบ่งปันอาหารและกิจกรรมในชุมชนของคุณจะแสดงตรงนี้</p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-                  {activities.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-4 p-4 rounded-2xl bg-gray-50/40 border border-gray-100 hover:bg-gray-50 transition-all">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center text-lg flex-shrink-0">
-                        {activity.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm text-gray-800 truncate">{activity.title}</h3>
-                        <p className="text-xs text-gray-500 mt-0.5">{activity.description}</p>
-                        <p className="text-[10px] text-gray-400 font-medium mt-1.5 flex items-center gap-1">⏰ {activity.time}</p>
+              {activities.length > 0 ? (
+                <div className="space-y-3">
+                  {activities.map((activity, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between border-b border-gray-100 pb-3"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-800">
+                          🍱 {activity.title}
+                        </p>
+
+                        <p className="text-sm text-gray-500">
+                          {
+                            activity.status === "available"
+                              ? "🟢 Active"
+                              : activity.status === "claimed"
+                                ? "🟡 Claimed"
+                                : activity.status === "completed"
+                                  ? "🔵 Completed"
+                                  : "🔴 Expired"
+                          }
+                        </p>
+
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(activity.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : (
+                <div className="text-center py-10 text-gray-400">
+                  ยังไม่มีกิจกรรม
                 </div>
               )}
             </div>

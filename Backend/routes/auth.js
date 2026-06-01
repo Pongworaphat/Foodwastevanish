@@ -60,7 +60,16 @@ router.post("/signin",
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
 
-      const token = jwt.sign({ id: user._id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
+      const token = jwt.sign(
+        {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
 
       return res.json({
         token,
