@@ -15,19 +15,20 @@ import HelpPage from "./pages/HelpPage";
 import FeedbackPage from "./pages/FeedbackPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EditDonationPage from "./pages/EditDonationPage";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminUsers from "./pages/AdminUsers";
-import AdminDonations from "./pages/AdminDonations";
-import AdminRoute from "./components/Navbar/AdminRoute";
-import AdminFeedbacks from "./pages/AdminFeedbacks";
+
+import AdminDashboard from "./admin/pages/AdminDashboard";
+import AdminUsers from "./admin/pages/AdminUsers";
+import AdminDonations from "./admin/pages/AdminDonations";
+import AdminFeedbacks from "./admin/pages/AdminFeedbacks";
+import AdminReports from "./admin/pages/AdminReports";
+
+import AdminRoute from "./admin/routes/AdminRoute";
 
 function App() {
   return (
     <>
       <Navbar />
-
       <Routes>
-        {/* public routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/browse" element={<BrowsePage />} />
         <Route path="/signin" element={<SigninPage />} />
@@ -136,7 +137,16 @@ function App() {
             </AdminRoute>
           }
         />
-        
+
+        <Route
+          path="/admin/reports"
+          element={
+            <AdminRoute>
+              <AdminReports />
+            </AdminRoute>
+          }
+        />
+
       </Routes>
     </>
   );

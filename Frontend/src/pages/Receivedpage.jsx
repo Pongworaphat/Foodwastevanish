@@ -7,9 +7,23 @@ export default function ReceivedPage() {
   const [tab, setTab] = useState("Pending");
   const [selectedDonation, setSelectedDonation] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  const [showReport, setShowReport] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDescription, setReportDescription] = useState("");
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
   const { donations } = useDonations();
+
+  console.log(
+    donations.map((d) => ({
+      title: d.title,
+      status: d.status,
+      receiver: d.receiver,
+    }))
+  );
+
+  const currentUserId = currentUser?._id || currentUser?.id;
 
   const receivedList = donations.filter((d) => {
     const receiverId = d.receiver?._id || d.receiver;
@@ -31,6 +45,70 @@ export default function ReceivedPage() {
 
   const loading = false;
   const navigate = useNavigate();
+
+  const handleReport = () => {
+
+    if (!reportReason) {
+      alert("Please select a reason");
+      return;
+    }
+
+    console.log({
+      donationId: selectedDonation?._id,
+      donorId: selectedDonation?.donor?._id,
+      reportReason,
+      reportDescription,
+    });
+
+    const handleReport = async () => {
+
+      if (!reportReason) {
+        alert("Please select a reason");
+        return;
+      }
+
+      try {
+
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(
+          "http://localhost:5000/api/reports",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              donation: selectedDonation._id,
+              reportedUser: selectedDonation.donor._id,
+              reason: reportReason,
+              description: reportDescription,
+            }),
+          }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message);
+        }
+
+        alert("Report submitted successfully");
+
+        setShowReport(false);
+        setReportReason("");
+        setReportDescription("");
+
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+
+    setShowReport(false);
+    setReportReason("");
+    setReportDescription("");
+  };
 
   const filtered = receivedList.filter((d) =>
     tab === "Pending"
@@ -225,8 +303,8 @@ export default function ReceivedPage() {
                           </button>
                         </div>
 
-                        <div className="text-xs text-yellow-500">
-                          ⭐ {item.rating ?? "-"}
+                        <div className="text-xs text-gray-500 font-medium">
+                          ⭐ {item.donor?.trustScore ?? 0}%
                         </div>
                       </div>
                     </div>
@@ -323,8 +401,8 @@ export default function ReceivedPage() {
                       {selectedDonation.donor?.username || "Unknown"}
                     </button>
                   </p>
-                  <div className="text-sm text-yellow-500">
-                    ⭐ {selectedDonation.rating ?? "-"}
+                  <div className="text-xs text-gray-500 font-medium">
+                    ⭐ {selectedDonation?.donor?.trustScore ?? 0}%
                   </div>
                 </div>
               </div>
@@ -358,24 +436,115 @@ export default function ReceivedPage() {
                     : "⏳ Awaiting pickup confirmation"}
               </div>
 
+              {/* Action Buttons */}
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={() => setSelectedDonation(null)}
-                  className="flex-1 border border-gray-300 py-3 rounded-2xl text-gray-700 hover:bg-gray-50"
+                  className="flex-1 border border-gray-300 py-3 rounded-2xl text-gray-700 hover:bg-gray-50 transition"
                 >
                   Close
                 </button>
                 <button
                   onClick={() => navigate("/chat", { state: { donation: selectedDonation } })}
-                  className="flex-1 bg-emerald-600 text-white py-3 rounded-2xl hover:bg-emerald-700"
+                  className="flex-1 bg-emerald-600 text-white py-3 rounded-2xl hover:bg-emerald-700 transition"
                 >
                   {selectedDonation.status === "completed" ? "View Chat" : "Open Chat"}
+                </button>
+              </div>
+
+              {/* Report Section */}
+              <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col items-center justify-center">
+                <p className="text-xs text-gray-400 mb-2">
+                  Having a problem?
+                </p>
+
+                <button
+                  onClick={() => setShowReport(true)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors duration-200"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                  Report Problem
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* REPORT ISSUE MODAL */}
+      {showReport && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl">
+
+            <h2 className="text-xl font-bold mb-4">
+              Report Issue
+            </h2>
+
+            <select
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className="w-full border rounded-xl p-3 mb-3"
+            >
+              <option value="">Select reason</option>
+              <option value="Food quality issue">
+                Food quality issue
+              </option>
+              <option value="Wrong pickup location">
+                Wrong pickup location
+              </option>
+              <option value="Donor didn't show up">
+                Donor didn't show up
+              </option>
+              <option value="Inappropriate behavior">
+                Inappropriate behavior
+              </option>
+              <option value="Other">
+                Other
+              </option>
+            </select>
+
+            <textarea
+              rows={4}
+              value={reportDescription}
+              onChange={(e) =>
+                setReportDescription(e.target.value)
+              }
+              placeholder="Describe the issue..."
+              className="w-full border rounded-xl p-3 mb-4"
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowReport(false)}
+                className="flex-1 border py-2 rounded-xl"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleReport}
+                className="flex-1 bg-red-500 text-white py-2 rounded-xl hover:bg-red-600"
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <UserProfileModal
         user={selectedUser}
         onClose={() => setSelectedUser(null)}

@@ -258,7 +258,9 @@ export default function MydonationsPage() {
                           >
                             {d.donor?.username || "You"}
                           </button>
-                          <div className="mt-0.5 text-xs text-gray-500">⭐ {d.rating ?? "-"}</div>
+                          <div className="mt-0.5 text-xs text-gray-500 font-medium">
+                            ⭐ {d.donor?.trustScore ?? 0}%
+                          </div>
                         </div>
                         {d.verified && (
                           <div className="ml-2 rounded-md border px-2 py-1 text-xs font-medium text-gray-600">Verified</div>
@@ -387,7 +389,9 @@ export default function MydonationsPage() {
                     >
                       {selectedDonation.donor?.username}
                     </button>
-                    <div className="text-xs text-gray-500 mt-1">⭐ {selectedDonation.rating ?? "-"}</div>
+                    <div className="text-xs text-gray-500 mt-1 font-medium">
+                      ⭐ {selectedDonation.donor?.trustScore ?? 0}%
+                    </div>
                   </div>
                   {selectedDonation.verified && (
                     <div className="rounded-md border px-2 py-1 text-xs font-medium text-gray-600">Verified</div>

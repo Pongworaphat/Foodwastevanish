@@ -45,6 +45,7 @@ export default function UserProfileModal({ user, onClose }) {
                     text: "text-pink-600",
                 };
 
+
     return (
         <div
             onClick={onClose}

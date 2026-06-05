@@ -84,7 +84,12 @@ export default function SigninPage() {
         <h1 className="text-7xl animate-[fadeIn_1.2s_ease-out] font-black tracking-tight leading-[0.9] text-white">
           ลดขยะอาหาร
           <br />
-          <span className="text-emerald-400">แบ่งปันก่อนจะสูญเปล่า</span>
+          <span className="text-emerald-400 block">
+            แบ่งปันก่อนจะ
+          </span>
+          <span className="text-emerald-400 block">
+            สูญเปล่า
+          </span>
         </h1>
 
         <p className="mt-6 text-lg text-white/70 leading-relaxed max-w-xl">

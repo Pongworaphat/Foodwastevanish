@@ -23,7 +23,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-
 export default function BrowsePage() {
   const [activeCategory, setActiveCategory] = useState("All Donations");
   const [search, setSearch] = useState("");
@@ -32,8 +31,18 @@ export default function BrowsePage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedDonation, setSelectedDonation] = useState(null);
 
+  const [interests, setInterests] = useState({
+    counts: {},
+    percentages: {},
+  });
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+
+  const userLat =
+    currentUser?.latitude;
+
+  const userLng =
+    currentUser?.longitude;
 
   const {
     donations,
@@ -57,21 +66,212 @@ export default function BrowsePage() {
     }
   }, [selectedDonationId, donations]);
 
-  const filteredDonations = donations.filter((donation) => {
-    const matchCategory =
-      activeCategory === "All Donations" ||
-      donation.category === activeCategory;
-    if (donation.status !== "available") return false;
+  useEffect(() => {
+    const token =
+      localStorage.getItem("authToken");
 
-    const text =
-      (donation.title + " " + (donation.description || "")).toLowerCase();
+    fetch("http://localhost:5000/api/user/interests", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
 
-    return (
-      donation.status === "available" &&
-      matchCategory &&
-      text.includes(search.toLowerCase())
-    );
-  });
+        console.log(
+          "🧠 Interest Analytics:",
+          data
+        );
+
+        setInterests(data);
+
+      })
+      .catch(console.error);
+
+  }, []);
+
+  // Distance Function
+  const calculateDistance = (
+    lat1,
+    lon1,
+    lat2,
+    lon2
+  ) => {
+
+    const R = 6371;
+
+    const dLat =
+      (lat2 - lat1) * Math.PI / 180;
+
+    const dLon =
+      (lon2 - lon1) * Math.PI / 180;
+
+    const a =
+      Math.sin(dLat / 2) *
+      Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) *
+      Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+    const c =
+      2 * Math.atan2(
+        Math.sqrt(a),
+        Math.sqrt(1 - a)
+      );
+
+    return R * c;
+  };
+
+  const formatDistance = (
+    lat1,
+    lon1,
+    lat2,
+    lon2
+  ) => {
+
+    const distance =
+      calculateDistance(
+        lat1,
+        lon1,
+        lat2,
+        lon2
+      );
+
+    const meters =
+      Math.round(distance * 1000);
+
+    if (meters < 900) {
+      return `${meters} m away`;
+    }
+
+    return `${distance.toFixed(1)} km away`;
+  };
+
+  const getDistanceScore = (distance) => {
+    if (distance <= 2) return 35;
+    if (distance <= 5) return 25;
+    if (distance <= 10) return 15;
+    if (distance <= 20) return 5;
+    return 0;
+  };
+
+  const getExpiryScore = (expDate) => {
+    if (!expDate) return 0;
+
+    const now = new Date();
+    const exp = new Date(expDate);
+
+    const hoursLeft =
+      (exp - now) / (1000 * 60 * 60);
+
+    if (hoursLeft <= 0) return -999;
+
+    if (hoursLeft <= 6) return 25;
+    if (hoursLeft <= 12) return 20;
+    if (hoursLeft <= 24) return 15;
+    if (hoursLeft <= 48) return 10;
+
+    return 0;
+  };
+
+  const filteredDonations = donations
+    .filter((donation) => {
+      const matchCategory =
+        activeCategory === "All Donations" ||
+        donation.category === activeCategory;
+
+      if (donation.status !== "available")
+        return false;
+
+      const text =
+        (
+          donation.title +
+          " " +
+          (donation.description || "")
+        ).toLowerCase();
+
+      return (
+        matchCategory &&
+        text.includes(
+          search.toLowerCase()
+        )
+      );
+    })
+    .sort((a, b) => {
+
+      const categoryScoreA =
+        interests.percentages?.[
+        a.category
+        ] || 0;
+
+      const categoryScoreB =
+        interests.percentages?.[
+        b.category
+        ] || 0;
+
+      const typeScoreA =
+        interests.typePercentages?.[
+        a.foodType
+        ] || 0;
+
+      const typeScoreB =
+        interests.typePercentages?.[
+        b.foodType
+        ] || 0;
+
+      const distanceA =
+        userLat != null &&
+          userLng != null &&
+          a.latitude != null &&
+          a.longitude != null
+          ? calculateDistance(
+            Number(userLat),
+            Number(userLng),
+            Number(a.latitude),
+            Number(a.longitude)
+          )
+          : 999;
+
+      const distanceB =
+        userLat != null &&
+          userLng != null &&
+          b.latitude != null &&
+          b.longitude != null
+          ? calculateDistance(
+            Number(userLat),
+            Number(userLng),
+            Number(b.latitude),
+            Number(b.longitude)
+          )
+          : 999;
+
+      const distanceScoreA =
+        getDistanceScore(distanceA);
+
+      const distanceScoreB =
+        getDistanceScore(distanceB);
+
+      const expiryScoreA =
+        getExpiryScore(a.expDate);
+
+      const expiryScoreB =
+        getExpiryScore(b.expDate);
+
+      const scoreA =
+        categoryScoreA +
+        typeScoreA +
+        distanceScoreA +
+        expiryScoreA;
+
+      const scoreB =
+        categoryScoreB +
+        typeScoreB +
+        distanceScoreB +
+        expiryScoreB;
+
+      return scoreB - scoreA;
+    });
 
   const formatDateTH = (date) => {
     if (!date) return "-";
@@ -118,6 +318,8 @@ export default function BrowsePage() {
         return "bg-white";
     }
   };
+
+
 
   const fallbackImage = "https://placehold.co/600x400/10b981/ffffff?text=Foodwaste+Vanish";
   const fallbackAvatar = "https://ui-avatars.com/api/?name=User";
@@ -174,24 +376,6 @@ export default function BrowsePage() {
           ))}
         </div>
 
-        {/* Category Legend */}
-        {/* <div className="mb-6 flex flex-wrap items-center gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-emerald-400"></div>
-            <span className="text-gray-600">Food Sharing</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-orange-300"></div>
-            <span className="text-gray-600">Animal Food</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-lime-300"></div>
-            <span className="text-gray-600">Organic Waste</span>
-          </div>
-        </div> */}
-
         {/* Donation Grid */}
         {filteredDonations.length === 0 ? (
           <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
@@ -205,7 +389,7 @@ export default function BrowsePage() {
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredDonations.map((donation) => {
+            {filteredDonations.map((donation, index) => {
               const id = donation._id;
               const img = donation.image
                 ? (donation.image.startsWith("http")
@@ -224,7 +408,8 @@ export default function BrowsePage() {
                       className="h-full w-full object-cover"
                       onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
                     />
-                    <span className="absolute right-3 top-3 rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+
+                    <span className="absolute right-3 top-3 rounded-full bg-green-100/90 backdrop-blur-sm px-3 py-1 text-[11px] font-semibold text-green-800 shadow-sm">
                       {donation.status || "available"}
                     </span>
                   </div>
@@ -272,13 +457,23 @@ export default function BrowsePage() {
                           {donation.donor?.username || "Anonymous"}
                         </button>
                         <div className="text-xs text-gray-500">
-                          ⭐ {donation.rating ?? "-"}
+                          ⭐ {donation.donor?.trustScore ?? 0}%
                         </div>
                       </div>
                     </div>
 
                     <div className="mt-3 space-y-2 text-sm text-gray-600">
                       <p>📍 {donation.pickupLocation || "-"}</p>
+                      <p>
+                        🚶 {
+                          formatDistance(
+                            Number(userLat),
+                            Number(userLng),
+                            Number(donation.latitude),
+                            Number(donation.longitude)
+                          )
+                        }
+                      </p>
                       <p>📦 {donation.quantity || "-"}</p>
                       <p>🗓️ Exp: {formatDateTH(donation.expDate)}</p>
                     </div>
@@ -373,7 +568,7 @@ export default function BrowsePage() {
                       </button>
 
                       <div className="text-xs text-gray-500 mt-1">
-                        ⭐ {selectedDonation.rating ?? "-"}
+                        ⭐ {selectedDonation?.donor?.trustScore ?? 0}%
                       </div>
                     </div>
 
@@ -436,7 +631,9 @@ export default function BrowsePage() {
                   {selectedDonation.donor?._id !== currentUser?._id && (
                     <button
                       onClick={async () => {
-                        await claimDonation(id);
+                        await claimDonation(
+                          selectedDonation._id
+                        );
                       }}
                       className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
                     >

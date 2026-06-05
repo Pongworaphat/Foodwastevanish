@@ -17,6 +17,9 @@ export default function ProfilePage() {
     avatar: currentUser.avatar || "",
   });
 
+  const [preferences, setPreferences] = useState(
+    currentUser.preferences || []
+  );
 
   const [social, setSocial] = useState({ facebook: "", instagram: "", });
   const [stats, setStats] = useState({
@@ -26,6 +29,16 @@ export default function ProfilePage() {
     trustScore: 0,
     reviews: 0,
   });
+
+  const [interests, setInterests] = useState({
+    counts: {},
+    percentages: {},
+  });
+
+  const favoriteCategory =
+    Object.entries(
+      interests.percentages || {}
+    ).sort((a, b) => b[1] - a[1])[0];
 
   const [activities, setActivities] = useState([]);
 
@@ -66,7 +79,11 @@ export default function ProfilePage() {
         .then((res) => res.json())
         .then((data) => {
           const user = data.user;
-          console.log("PROFILE DATA:", data);
+
+          setPreferences(
+            user.preferences || []
+          );
+
           setStats({
             donationsShared: data.stats?.donationsShared || 0,
             completedDonations: data.stats?.completedDonations || 0,
@@ -95,6 +112,10 @@ export default function ProfilePage() {
             instagram: user.social?.instagram || "",
           });
 
+          setPreferences(
+            user.preferences || []
+          );
+
           if (user.avatar) {
             const avatarUrl = user.avatar.startsWith("/")
               ? `${backend}${user.avatar}`
@@ -118,6 +139,18 @@ export default function ProfilePage() {
         })
         .catch(console.error);
     }
+
+    fetch(`${backend}/api/user/interests`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setInterests(data);
+        console.log("INTERESTS", data)
+      })
+      .catch(console.error);
   }, []);
 
   const showAlert = (title, message, type = "alert", onConfirm = null) => {
@@ -245,8 +278,8 @@ export default function ProfilePage() {
         username: profile.name,
         phone: profile.phone,
         about: profile.about,
-
         social,
+        preferences,
       };
       console.log("SAVE PAYLOAD:", payload);
 
@@ -316,6 +349,14 @@ export default function ProfilePage() {
     }
   }
 
+  const totalCompleted =
+    Object.values(
+      interests.counts || {}
+    ).reduce(
+      (sum, value) => sum + value,
+      0
+    );
+
   const trustScore = stats.trustScore || 0;
 
   const trustColor =
@@ -339,6 +380,12 @@ export default function ProfilePage() {
           text: "text-red-600",
           label: "🥉 New Donor",
         };
+
+  const categoryIcons = {
+    "Food Sharing": "🍱",
+    "Animal Food": "🐶",
+    "Organic Waste": "🌱",
+  };
 
   return (
     <div className="min-h-screen font-sans antialiased bg-gradient-to-br from-emerald-50 via-white to-emerald-100 antialiased font-sans">
@@ -502,8 +549,154 @@ export default function ProfilePage() {
                   <label className="text-xs font-bold text-gray-500 ml-1">เกี่ยวกับฉัน</label>
                   <textarea name="about" value={profile.about} onChange={handleChange} rows={3} placeholder="เล่าเป้าหมายในการช่วยลด Food Waste ของคุณ..." className="px-4 py-3 rounded-xl bg-gray-50/50 border border-gray-200/80 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all text-sm text-gray-700 resize-none" />
                 </div>
-
               </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 shadow-xl shadow-emerald-900/5 ring-1 ring-black/5 ">
+              <h3 className="text-sm font-bold text-gray-700 mb-4">
+                🧠 Recommendation Insights
+              </h3>
+
+              {totalCompleted < 5 ? (
+
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-2xl">🧠</span>
+
+                    <div>
+                      <h4 className="font-semibold text-emerald-700">
+                        Learning your interests...
+                      </h4>
+
+                      <p className="text-sm text-emerald-600">
+                        Complete more donations to improve recommendations
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Progress */}
+
+                  <div className="mb-2 flex justify-between text-sm">
+                    <span>Learning Progress</span>
+                    <span>{totalCompleted}/5</span>
+                  </div>
+
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className="bg-emerald-500 h-3 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${(totalCompleted / 5) * 100}%`,
+                      }}
+                    />
+                  </div>
+
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    {5 - totalCompleted > 0
+                      ? `Need ${5 - totalCompleted
+                      } more completed donations`
+                      : "Ready"}
+                  </p>
+
+                </div>
+
+              ) : (
+
+                <div className="space-y-4">
+
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+
+                    <h4 className="font-semibold text-emerald-700">
+                      Personalized Recommendations Active
+                    </h4>
+
+                    <p className="text-sm text-emerald-600 mt-1">
+                      Your donation feed is ranked using:
+                    </p>
+
+                    <ul className="mt-2 text-sm text-emerald-700 space-y-1">
+                      <li>✔ Completed donation history</li>
+                      <li>✔ Distance ranking</li>
+                      <li>✔ Expiry urgency</li>
+                    </ul>
+
+                    <p className="text-xs text-emerald-500 mt-3">
+                      Based on {totalCompleted} completed donations
+                    </p>
+
+                  </div>
+
+                  <div className="rounded-2xl border border-gray-200 bg-white p-4">
+
+                    <div className="text-xs text-gray-500 mb-1">
+                      Favorite Category
+                    </div>
+
+                    <div className="text-lg font-semibold text-gray-800">
+                      {favoriteCategory?.[0]
+                        ? `${categoryIcons[favoriteCategory[0]]} ${favoriteCategory[0]}`
+                        : "No data"}
+                    </div>
+
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>🍱 Food Sharing</span>
+                      <span>
+                        {interests.percentages?.["Food Sharing"] || 0}%
+                      </span>
+                    </div>
+
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div
+                        className="bg-emerald-500 h-3 rounded-full"
+                        style={{
+                          width: `${interests.percentages?.["Food Sharing"] || 0}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>🐶 Animal Food</span>
+                      <span>
+                        {interests.percentages?.["Animal Food"] || 0}%
+                      </span>
+                    </div>
+
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div
+                        className="bg-orange-500 h-3 rounded-full"
+                        style={{
+                          width: `${interests.percentages?.["Animal Food"] || 0}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>🌱 Organic Waste</span>
+                      <span>
+                        {interests.percentages?.["Organic Waste"] || 0}%
+                      </span>
+                    </div>
+
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div
+                        className="bg-lime-500 h-3 rounded-full"
+                        style={{
+                          width: `${interests.percentages?.["Organic Waste"] || 0}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+              )}
+
             </div>
 
             {/* SOCIAL */}
@@ -576,7 +769,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between mb-5 border-b border-gray-50 pb-4">
                 <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                   <span className="w-1.5 h-5 bg-emerald-500 rounded-full inline-block"></span>
-                  กิจกรรมล่าสุด
+                  กิจกรรมล่าสุด (Recent activity)
                 </h2>
                 <span className="text-xs font-bold bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full">
                   {activities.length} กิจกรรม
@@ -584,11 +777,14 @@ export default function ProfilePage() {
               </div>
 
               {activities.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                   {activities.map((activity, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between border-b border-gray-100 pb-3"
+                      className={`flex items-center justify-between pb-3 ${index !== activities.length - 1
+                        ? "border-b border-gray-100"
+                        : ""
+                        }`}
                     >
                       <div>
                         <p className="font-medium text-gray-800">

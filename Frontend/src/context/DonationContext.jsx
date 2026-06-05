@@ -251,8 +251,22 @@ export const DonationProvider = ({ children }) => {
     }
   };
 
-  const deleteDonation = (id) => {
-    setBackendDonations((prev) => prev.filter((d) => (d._id || d.id) !== id));
+  const deleteDonation = async (id) => {
+    const token = localStorage.getItem("token");
+
+    await fetch(
+      `http://localhost:5000/api/donations/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setBackendDonations((prev) =>
+      prev.filter((d) => (d._id || d.id) !== id)
+    );
   };
 
   return (

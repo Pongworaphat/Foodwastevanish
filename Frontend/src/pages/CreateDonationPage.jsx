@@ -4,7 +4,6 @@ import toast from "react-hot-toast";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { useMapEvents } from "react-leaflet";
-// 🔥 แก้บั๊กหมุด Leaflet ไม่แสดงผลใน React
 import L from "leaflet";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -82,7 +81,7 @@ export default function CreateDonationPage() {
         if (res.ok) {
           setProfileData(data.user);
           const location = data.user.locationNote || "Pickup location not set";
-          setProfileLocation(location);
+          setProfileLocation("");
           setDonationLocation("");
           setDonationLat(data.user.latitude);
           setDonationLng(data.user.longitude);
@@ -142,6 +141,7 @@ export default function CreateDonationPage() {
       formData.append("description", form.description);
       formData.append("quantity", form.quantity);
       formData.append("category", selectedCategory);
+      formData.append("foodType", form.foodType);
       formData.append("pickupLocation", donationLocation);
       formData.append("latitude", donationLat);
       formData.append("longitude", donationLng);
@@ -310,12 +310,35 @@ export default function CreateDonationPage() {
                       onChange={handleChange}
                       className="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-800 bg-white shadow-sm outline-none transition duration-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 hover:border-slate-300 appearance-none cursor-pointer"
                     >
-                      <option value="">Select food type</option>
-                      <option value="Cooked Food">Cooked Food</option>
-                      <option value="Bakery">Bakery</option>
-                      <option value="Fruits">Fruits</option>
-                      <option value="Vegetables">Vegetables</option>
-                      <option value="Dry Food">Dry Food</option>
+                      <option value="" disabled>Select food type</option>
+
+                      <optgroup label="Human Food">
+                        <option value="Cooked Food">Cooked Food</option>
+                        <option value="Bakery">Bakery</option>
+                        <option value="Fruits & Vegetables">Fruits & Vegetables</option>
+                        <option value="Meat & Seafood">Meat & Seafood</option>
+                        <option value="Dairy & Eggs">Dairy & Eggs</option>
+                        <option value="Beverages">Beverages</option>
+                        <option value="Snacks & Grains">Snacks & Grains</option>
+                      </optgroup>
+
+                      <optgroup label="Animal Food">
+                        <option value="Dry Pet Food">Dry Pet Food</option>
+                        <option value="Wet Pet Food">Wet Pet Food</option>
+                        <option value="Fish Feed">Fish Feed</option>
+                        <option value="Pet Treats">Pet Treats</option>
+                      </optgroup>
+
+                      <optgroup label="Organic Waste & Scraps">
+                        <option value="Kitchen Scraps">Kitchen Scraps</option>
+                        <option value="Coffee Grounds">Coffee Grounds</option>
+                        <option value="Used Cooking Oil">Used Cooking Oil</option>
+                        <option value="Compost Material">Compost Material</option>
+                      </optgroup>
+
+                      <optgroup label="Other">
+                        <option value="Other">Other</option>
+                      </optgroup>
                     </select>
                     <span className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-xs text-slate-400">▼</span>
                   </div>
@@ -438,7 +461,7 @@ export default function CreateDonationPage() {
             <div className="space-y-6">
               <div className="rounded-2xl border border-emerald-200/60 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 p-6 shadow-sm">
                 <label className="block text-xs font-bold uppercase tracking-wider text-emerald-700 mb-2 ml-1">
-                  Pickup Location <span className="text-rose-500">*</span>
+                  Selected Pickup Point<span className="text-rose-500">*</span>
                 </label>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
                   <div className="flex-1">
